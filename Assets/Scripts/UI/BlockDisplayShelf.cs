@@ -32,6 +32,7 @@ namespace BuilderTool.LevelEditor
             _squareBlock.OnItemClick += SpawnBlock;
             _lShapeBlock.OnItemClick += SpawnBlock;
 
+            _mainCam = Camera.main;
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 

@@ -1,6 +1,8 @@
-﻿using BuilderTool.FileConvert;
+﻿using BuilderTool.Enums;
+using BuilderTool.FileConvert;
 using BuilderTool.Helpers;
 using BuilderTool.LevelEditor;
+using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -24,6 +26,15 @@ namespace BuilderTool.UIElement
         [SerializeField] private Button _loadLevelBtn;
         [SerializeField] private Button _deleteLevelBtn;
 
+        public string LevelId => _levelIdInput.text;
+        public int LevelTime => int.TryParse(_timeInput.text, out int result) ? result : -1;
+        public EDifficulty LevelDifficulty => (EDifficulty)_difficultiDropdown.value;
+
+        public bool CheckLevelInfo()
+        {
+            return LevelId != "" && LevelTime >= 0;
+        }
+
         private void OnClearButtonClicked()
         {
             var blockList = EditorField.Instance.BlockDict.Keys.ToArray();
@@ -33,7 +44,7 @@ namespace BuilderTool.UIElement
 
         private void OnSaveButtonClicked()
         {
-            FieldInfoConverter.ConvertFieldToJson();
+            FileManager.ConvertLevelToJson();
         }
 
         private void OnTestButtonClicked()

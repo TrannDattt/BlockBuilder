@@ -9,7 +9,8 @@ namespace BuilderTool.LevelEditor
 {
     public class EditorTile : MonoBehaviour
     {
-        [SerializeField] private SpriteRenderer _spriteRenderer;
+        private SpriteRenderer _spriteRenderer;
+        //[SerializeField] private SpriteRenderer _spriteRenderer;
 
         [SerializeField] private EmptyTile _emptyTile;
         [SerializeField] private GroundTile _groundTile;
@@ -94,6 +95,11 @@ namespace BuilderTool.LevelEditor
         public void UnselectTile()
         {
             _spriteRenderer.color = CurTileAttribute.TileColor;
+        }
+
+        private void Awake()
+        {
+            _spriteRenderer = GetComponent<SpriteRenderer>();
         }
     }
 }

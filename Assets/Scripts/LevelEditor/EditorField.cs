@@ -50,10 +50,5 @@ namespace BuilderTool.LevelEditor
         {
             CreateNewField();
         }
-
-        private void Update()
-        {
-            //LogTileAttribute();
-        }
     }
 }
