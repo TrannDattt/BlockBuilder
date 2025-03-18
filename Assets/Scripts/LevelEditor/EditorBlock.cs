@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static BuilderTool.FileConvert.BlockInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
@@ -26,10 +27,6 @@ namespace BuilderTool.LevelEditor
         private Vector3 _offsetToPointer;
         private bool _isPickedUp = false;
 
-        private bool _isSelected = false;
-
-        public event Action<EditorBlock> OnBlockDropped;
-
         public void InitBlock()
         {
             _mainCamera = Camera.main;
@@ -38,7 +35,12 @@ namespace BuilderTool.LevelEditor
             SecondaryColor = EColor.Black;
 
             ChangeBlockPrimaryColor(PrimaryColor);
-            OnBlockDropped = null;
+        }
+
+        public void UpdateBlockData(BlockData data)
+        {
+            ChangeBlockPrimaryColor(data.PrimaryColor);
+            //Change
         }
 
         public void ChangeBlockPrimaryColor(EColor color)
@@ -56,21 +58,18 @@ namespace BuilderTool.LevelEditor
 
         public void SelectBlock()
         {
-            _isSelected = true;
-
-            BlockSelectHandler.Instance.AddSelectedBlock(this);
+            //_isSelected = true;
         }
 
         public void UnselectedBlock()
         {
-            _isSelected = false;
+            //_isSelected = false;
             //ChangeBlockPrimaryColor(PrimaryColor);
         }
 
         public void PickUpBlock()
         {
             _isPickedUp = true;
-            SelectBlock();
             _offsetToPointer = transform.position - _mainCamera.ScreenToWorldPoint(Input.mousePosition);
         }
 
@@ -84,33 +83,12 @@ namespace BuilderTool.LevelEditor
             transform.position = _mainCamera.ScreenToWorldPoint(Input.mousePosition) + _offsetToPointer;
         }
 
-        private void Start()
-        {
-            InitBlock();
-        }
-
         private void Update()
         {
             if (_isPickedUp)
             {
                 MoveBlockAfterPointer();
             }
-        }
-
-        private void OnDestroy()
-        {
-            OnBlockDropped = null;
-        }
-
-        private void OnMouseDown()
-        {
-            PickUpBlock();
-        }
-
-        private void OnMouseUp()
-        {
-            DropBlock();
-            OnBlockDropped?.Invoke(this);
         }
     }
 }

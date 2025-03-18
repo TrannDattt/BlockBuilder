@@ -8,6 +8,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static BuilderTool.FileConvert.FileManager;
 
 namespace BuilderTool.UIElement
 {
@@ -35,35 +36,50 @@ namespace BuilderTool.UIElement
             return LevelId != "" && LevelTime >= 0;
         }
 
-        private void OnClearButtonClicked()
+        public void UpdateLevelInfo(LevelInfoData levelInfoData)
+        {
+            _levelIdInput.text = levelInfoData.Id;
+            _timeInput.text = levelInfoData.Time.ToString();
+            _difficultiDropdown.value = (int)levelInfoData.Difficulty;
+        }
+
+        private void ClearBoard()
         {
             var blockList = EditorField.Instance.BlockDict.Keys.ToArray();
             BlockPlacement.Instance.RemoveBlock(blockList);
             EditorField.Instance.CreateNewField();
         }
 
-        private void OnSaveButtonClicked()
+        private void SaveLevel()
         {
-            FileManager.ConvertLevelToJson();
+            FileManager.SaveJsonFile();
         }
 
-        private void OnTestButtonClicked()
+        private void LoadLevel()
+        {
+            ClearBoard();
+
+            FileManager.LoadSavedFile();
+        }
+
+        private void TestLevel()
         {
             SceneManager.LoadSceneAsync("SceneTester");
         }
 
-        private void OnDesignButtonClicked()
+        private void DesignLevel()
         {
             SceneManager.LoadSceneAsync("SceneEditor");
         }
 
         private void Start()
         {
-            _testBtn.onClick.AddListener(OnTestButtonClicked);
-            _designBtn.onClick.AddListener(OnDesignButtonClicked);
+            _testBtn.onClick.AddListener(TestLevel);
+            _designBtn.onClick.AddListener(DesignLevel);
 
-            _clearFieldBtn.onClick.AddListener(OnClearButtonClicked);
-            _saveLevelBtn.onClick.AddListener(OnSaveButtonClicked);
+            _clearFieldBtn.onClick.AddListener(ClearBoard);
+            _saveLevelBtn.onClick.AddListener(SaveLevel);
+            _loadLevelBtn.onClick.AddListener(LoadLevel);
         }
     }
 }

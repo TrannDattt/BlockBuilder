@@ -17,7 +17,8 @@ namespace BuilderTool.LevelEditor
 
         private void SpawnBlock(DisplayedItem item)
         {
-            BlockPooling.Instance.GetBlock(item.Shape, GetItemWorldPos(item));
+            var newBlock = BlockPooling.Instance.GetBlock(item.Shape, GetItemWorldPos(item));
+            BlockSelectHandler.Instance.PickUpBlock(newBlock);
         }
 
         private Vector3 GetItemWorldPos(DisplayedItem item)

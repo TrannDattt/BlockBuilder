@@ -17,28 +17,29 @@ namespace BuilderTool.Editor
         private Queue<EditorBlock> _squareBlockQueue = new();
         private Queue<EditorBlock> _lShapeBlockQueue = new();
 
-        public void GetBlock(EShape shape, Vector3 spawnedPos)
+        public EditorBlock GetBlock(EShape shape, Vector3 spawnedPos)
         {
             switch (shape)
             {
                 case EShape.Square:
-                    GetBlockFromPool(_squareBlock, ref _squareBlockQueue, spawnedPos);
-                    break;
+                    return GetBlockFromPool(_squareBlock, ref _squareBlockQueue, spawnedPos);
+                    //break;
 
                 case EShape.Cross:
-                    GetBlockFromPool(_crossBlock, ref _crossBlockQueue, spawnedPos);
-                    break;
+                    return GetBlockFromPool(_crossBlock, ref _crossBlockQueue, spawnedPos);
+                    //break;
 
                 case EShape.LShaped:
-                    GetBlockFromPool(_lShapeBlock, ref _lShapeBlockQueue, spawnedPos);
-                    break;
+                    return GetBlockFromPool(_lShapeBlock, ref _lShapeBlockQueue, spawnedPos);
+                    //break;
 
                 default:
-                    break;
+                    return null;
+                    //break;
             }
         }
 
-        private void GetBlockFromPool(EditorBlock block, ref Queue<EditorBlock> pool, Vector3 spawnedPos)
+        private EditorBlock GetBlockFromPool(EditorBlock block, ref Queue<EditorBlock> pool, Vector3 spawnedPos)
         {
             if(pool.Count == 0)
             {
@@ -55,7 +56,8 @@ namespace BuilderTool.Editor
             spawnedBlock.transform.localPosition = spawnedPos;
 
             spawnedBlock.InitBlock();
-            spawnedBlock.PickUpBlock();
+
+            return spawnedBlock;
         }
 
         public void ReturnBlock(EditorBlock block)

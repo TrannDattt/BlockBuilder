@@ -52,6 +52,11 @@ namespace BuilderTool.LevelEditor
             _containKeyToggle.isOn = block.ContainKey;
         }
 
+        public void CloseMenu()
+        {
+            _attributeSelectorMenu.SetActive(false);
+        }
+
         private void OnPrimaryColorSelected(int index)
         {
             var color = (EColor)index;
