@@ -1,6 +1,7 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
 using UnityEngine;
+using static BuilderTool.FileConvert.FieldInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
@@ -15,6 +16,11 @@ namespace BuilderTool.LevelEditor
             base.ResetAttribute();
 
             ChangeBlockColor(EColor.Black);
+        }
+
+        public void UpdateAttribute(BlockTileData data)
+        {
+            ChangeBlockColor(data.BlockColor);
         }
 
         public void ChangeBlockColor(EColor color)

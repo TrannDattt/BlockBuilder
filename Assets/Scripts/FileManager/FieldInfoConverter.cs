@@ -1,8 +1,11 @@
 using BuilderTool.Enums;
 using BuilderTool.LevelEditor;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BuilderTool.FileConvert
 {
@@ -73,10 +76,18 @@ namespace BuilderTool.FileConvert
             }
         }
 
+        [Serializable]
+        public class TileListWrapper
+        {
+            public List<Dictionary<string, object>> Tiles;
+        }
+
         public static string ConvertTileToJson()
         {
             string json = "";
-            foreach(var tile in EditorField.Instance.Tiles)
+            var tiles = EditorField.Instance.Tiles;
+            
+            foreach(var tile in tiles)
             {
                 switch (tile.CurTileAttribute)
                 {
@@ -84,28 +95,77 @@ namespace BuilderTool.FileConvert
                         break;
 
                     case GroundTile:
-                        json += JsonUtility.ToJson(new GroundTileData(tile));
+                        json += JsonUtility.ToJson(new GroundTileData(tile)) + ',';
                         break;
 
                     case DoorTile:
-                        json += JsonUtility.ToJson(new DoorTileData(tile));
+                        json += JsonUtility.ToJson(new DoorTileData(tile)) + ',';
                         json = Regex.Replace(json, @",?""(UpDoor|DownDoor|LeftDoor|RightDoor)"":\{""DoorColor"":0\}", "");
                         break;
 
                     case BlockTile:
-                        json += JsonUtility.ToJson(new BlockTileData(tile));
+                        json += JsonUtility.ToJson(new BlockTileData(tile)) + ',';
                         break;
 
                     default:
                         break;
                 }
             }
+
+            if (json.EndsWith(","))
+            {
+                json = json[..^1];
+            }
+
             return json;
         }
 
         public static void ConvertJsonToTile(string json)
         {
+            JArray tileArray = JArray.Parse(json);
 
+            List<string> groundTileJson = new();
+            List<string> doorTileJson = new();
+            List<string> blockTileJson = new();
+
+            foreach (var tile in tileArray)
+            {
+                int tileType = tile["TileType"]?.Value<int>() ?? -1;
+                string tileJson = tile.ToString(Formatting.None);
+                //Debug.Log(tileJson);
+
+                if (tileType == 1)
+                {
+                    groundTileJson.Add(tileJson);
+                }
+                else if (tileType == 2)
+                {
+                    doorTileJson.Add(tileJson);
+                }
+                else
+                {
+                    blockTileJson.Add(tileJson);
+                }
+            }
+
+            List<GroundTileData> groundTiles = ConvertJsonToList<GroundTileData>(groundTileJson);
+            List<DoorTileData> doorTiles = ConvertJsonToList<DoorTileData>(doorTileJson);
+            List<BlockTileData> blockTiles = ConvertJsonToList<BlockTileData>(blockTileJson);
+
+            EditorField.Instance.UpdateTileData(groundTiles, doorTiles, blockTiles);
+        }
+
+        private static List<T> ConvertJsonToList<T>(List<string> jsonList)
+        {
+            List<T> data = new();
+            foreach(var json in jsonList)
+            {
+                //Debug.Log(json);
+                var newData = JsonUtility.FromJson<T>(json);
+                data.Add(newData);
+            }
+
+            return data;
         }
     }
 }

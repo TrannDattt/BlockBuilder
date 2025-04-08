@@ -411,7 +411,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e06e30db4a3dbc4b9eabf1e1a10873b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _spriteRenderer: {fileID: 8853336158023859466}
   _emptyTile: {fileID: 1582378797811655271}
   _groundTile: {fileID: 7814650782510516786}
   _doorTile: {fileID: 2669109900778646919}
