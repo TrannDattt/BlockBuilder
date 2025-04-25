@@ -22,5 +22,13 @@ namespace BuilderTool.LevelEditor
             Color = color;
             _blockNode.color = ColorMapper.GetColor(color);
         }
+
+        public void FrozenBlock(int frozen_number)
+        {
+            if (frozen_number >= 1)
+            {
+
+            }
+        }
     }
 }

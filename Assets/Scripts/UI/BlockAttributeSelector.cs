@@ -9,6 +9,7 @@ namespace BuilderTool.LevelEditor
     public class BlockAttributeSelector : Singleton<BlockAttributeSelector>
     {
         [SerializeField] private GameObject _attributeSelectorMenu;
+        [SerializeField] private GameObject _blockSpecialsSelectorMenu;
 
         [SerializeField] private ColorDropdown _primaryColorSelectorDropdown;
         [SerializeField] private ColorDropdown _secondaryColorSelectorDropdown;
@@ -21,6 +22,7 @@ namespace BuilderTool.LevelEditor
         public void OpenSelectAttributeMenu(EditorBlock block)
         {
             _attributeSelectorMenu.SetActive(true);
+            _blockSpecialsSelectorMenu.SetActive(true);
 
             OpenPrimaryColorSelector(block);
             OpenSecondaryColorSelector(block);
@@ -65,7 +67,13 @@ namespace BuilderTool.LevelEditor
 
         private void OnSecondaryColorSelected(int index)
         {
+            var color = (EColor)index;
+            Debug.Log(index);
 
+            foreach (var block in BlockSelectHandler.Instance.SelectedBlocks)
+            {
+                block.ChangeBlockSecondaryColor(color);
+            }
         }
 
         private void OnContainStarToggled(bool isOn)
@@ -81,6 +89,13 @@ namespace BuilderTool.LevelEditor
         private void OnDeleteButtonClicked()
         {
             BlockPlacement.Instance.RemoveBlock(BlockSelectHandler.Instance.SelectedBlocks.ToArray());
+            CloseMenu();
+        }
+
+        public void CloseMenu()
+        {
+            _attributeSelectorMenu.SetActive(false);
+            _blockSpecialsSelectorMenu.SetActive(false);
         }
 
         private void Start()
@@ -93,7 +108,7 @@ namespace BuilderTool.LevelEditor
 
             _deleteBlockBtn.onClick.AddListener(OnDeleteButtonClicked);
 
-            _attributeSelectorMenu.SetActive(false);
+            CloseMenu();
         }
     }
 }

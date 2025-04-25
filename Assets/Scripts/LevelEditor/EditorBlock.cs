@@ -11,7 +11,7 @@ namespace BuilderTool.LevelEditor
     public class EditorBlock : MonoBehaviour
     {
         [SerializeField] private List<SpriteRenderer> _priRenderers;
-        //[SerializeField] private List<SpriteRenderer> _secRenderers;
+        [SerializeField] private List<SpriteRenderer> _secRenderers;
 
         [field: SerializeField] public GameObject BlockCoreUnit { get; private set; }
         [field: SerializeField] public List<GameObject> BlockSubUnits { get; private set; }
@@ -38,6 +38,7 @@ namespace BuilderTool.LevelEditor
             SecondaryColor = EColor.Black;
 
             ChangeBlockPrimaryColor(PrimaryColor);
+
             OnBlockDropped = null;
         }
 
@@ -54,6 +55,19 @@ namespace BuilderTool.LevelEditor
             }
         }
 
+        public void ChangeBlockSecondaryColor(EColor color)
+        {
+            if(color != EColor.Selected) 
+            { 
+                SecondaryColor = color; 
+            }
+
+            foreach(var renderer in _secRenderers)
+            {
+                renderer.color = color == EColor.Black ? Color.black : ColorMapper.GetColor(color);
+            }
+        }
+
         public void SelectBlock()
         {
             _isSelected = true;
@@ -65,6 +79,7 @@ namespace BuilderTool.LevelEditor
         {
             _isSelected = false;
             //ChangeBlockPrimaryColor(PrimaryColor);
+            BlockAttributeSelector.Instance.CloseMenu();
         }
 
         public void PickUpBlock()

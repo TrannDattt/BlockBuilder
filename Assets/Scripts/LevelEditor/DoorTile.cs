@@ -13,7 +13,7 @@ namespace BuilderTool.LevelEditor
         //public EColor ColorLeft { get; private set; } = EColor.Black;
         //public EColor ColorRight { get; private set; } = EColor.Black;
         //public List<EDirection> StarDirection { get; private set; } = new List<EDirection>(4) { EDirection.None };
-
+    
         [SerializeField] private SpriteRenderer _upDoor;
         [SerializeField] private SpriteRenderer _downDoor;
         [SerializeField] private SpriteRenderer _leftDoor;

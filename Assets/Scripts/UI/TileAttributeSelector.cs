@@ -11,6 +11,7 @@ namespace BuilderTool.LevelEditor
     public class TileAttributeSelector : Singleton<TileAttributeSelector>
     {
         [SerializeField] private GameObject _attributeSelectorMenu;
+        [SerializeField] private GameObject _doorAttributSelectorMenu;
         [SerializeField] private TileTypeDropdown _tileTypeSelectorDropdown;
 
         [SerializeField] private ColorDropdown _colorUpSelectorDropdown;
@@ -55,6 +56,7 @@ namespace BuilderTool.LevelEditor
             _colorDownSelectorDropdown.gameObject.SetActive(false);
             _colorLeftSelectorDropdown.gameObject.SetActive(false);
             _colorRightSelectorDropdown.gameObject.SetActive(false);
+            _doorAttributSelectorMenu.SetActive(false);
         }
 
         public void CloseMenu()
@@ -76,6 +78,8 @@ namespace BuilderTool.LevelEditor
             _colorDownSelectorDropdown.gameObject.SetActive(true);
             _colorLeftSelectorDropdown.gameObject.SetActive(true);
             _colorRightSelectorDropdown.gameObject.SetActive(true);
+
+            _doorAttributSelectorMenu.SetActive(true);
         }
 
         private void OpenBlockAttributeSelector(EditorTile tile)
