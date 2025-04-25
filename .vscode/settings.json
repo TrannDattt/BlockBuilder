@@ -56,6 +56,10 @@
         "temp/": true,
         "Temp/": true
     },
+<<<<<<< HEAD
     "dotnet.defaultSolution": "BlockjamBuilderTool3.sln",
     "dotnet.preferCSharpExtension": true
+=======
+    "dotnet.defaultSolution": "BlockBuilder.sln"
+>>>>>>> 732e7d7d1cabf2c72f6a9af7fa08dfcc070f22c5
 }

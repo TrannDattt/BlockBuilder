@@ -3,6 +3,7 @@ using BuilderTool.Helpers;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static BuilderTool.FileConvert.FieldInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
@@ -35,6 +36,14 @@ namespace BuilderTool.LevelEditor
             ChangeDoorColor(EDirection.Down, EColor.Black);
             ChangeDoorColor(EDirection.Left, EColor.Black);
             ChangeDoorColor(EDirection.Right, EColor.Black);
+        }
+
+        public void UpdateAttribute(DoorTileData data)
+        {
+            ChangeDoorColor(EDirection.Up, data.UpDoor.DoorColor);
+            ChangeDoorColor(EDirection.Down, data.DownDoor.DoorColor);
+            ChangeDoorColor(EDirection.Left, data.LeftDoor.DoorColor);
+            ChangeDoorColor(EDirection.Right, data.RightDoor.DoorColor);
         }
 
         public void ChangeDoorColor(EDirection dir, EColor color)

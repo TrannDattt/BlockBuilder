@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static BuilderTool.FileConvert.BlockInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
@@ -21,14 +22,11 @@ namespace BuilderTool.LevelEditor
         public EColor SecondaryColor { get; private set; }
         public bool ContainKey { get; private set; }
         public bool ContainStar { get; private set; }
+        public EditorTile CurrentTile { get; set; }
 
         private Camera _mainCamera;
         private Vector3 _offsetToPointer;
         private bool _isPickedUp = false;
-
-        private bool _isSelected = false;
-
-        public event Action<EditorBlock> OnBlockDropped;
 
         public void InitBlock()
         {
@@ -38,8 +36,17 @@ namespace BuilderTool.LevelEditor
             SecondaryColor = EColor.Black;
 
             ChangeBlockPrimaryColor(PrimaryColor);
+<<<<<<< HEAD
 
             OnBlockDropped = null;
+=======
+        }
+
+        public void UpdateBlockData(BlockData data)
+        {
+            ChangeBlockPrimaryColor(data.PrimaryColor);
+            //Change
+>>>>>>> 732e7d7d1cabf2c72f6a9af7fa08dfcc070f22c5
         }
 
         public void ChangeBlockPrimaryColor(EColor color)
@@ -70,14 +77,12 @@ namespace BuilderTool.LevelEditor
 
         public void SelectBlock()
         {
-            _isSelected = true;
-
-            BlockSelectHandler.Instance.AddSelectedBlock(this);
+            //_isSelected = true;
         }
 
         public void UnselectedBlock()
         {
-            _isSelected = false;
+            //_isSelected = false;
             //ChangeBlockPrimaryColor(PrimaryColor);
             BlockAttributeSelector.Instance.CloseMenu();
         }
@@ -85,7 +90,6 @@ namespace BuilderTool.LevelEditor
         public void PickUpBlock()
         {
             _isPickedUp = true;
-            SelectBlock();
             _offsetToPointer = transform.position - _mainCamera.ScreenToWorldPoint(Input.mousePosition);
         }
 
@@ -99,33 +103,12 @@ namespace BuilderTool.LevelEditor
             transform.position = _mainCamera.ScreenToWorldPoint(Input.mousePosition) + _offsetToPointer;
         }
 
-        private void Start()
-        {
-            InitBlock();
-        }
-
         private void Update()
         {
             if (_isPickedUp)
             {
                 MoveBlockAfterPointer();
             }
-        }
-
-        private void OnDestroy()
-        {
-            OnBlockDropped = null;
-        }
-
-        private void OnMouseDown()
-        {
-            PickUpBlock();
-        }
-
-        private void OnMouseUp()
-        {
-            DropBlock();
-            OnBlockDropped?.Invoke(this);
         }
     }
 }

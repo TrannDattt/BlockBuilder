@@ -7,7 +7,7 @@ using System.Linq;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.WSA;
+//using UnityEngine.WSA;
 
 namespace BuilderTool.LevelEditor
 {
@@ -92,6 +92,9 @@ namespace BuilderTool.LevelEditor
         {
             var snapOffset = new Vector2(tile.transform.position.x - block.BlockCoreUnit.transform.position.x, tile.transform.position.y - block.BlockCoreUnit.transform.position.y);
             block.transform.position += (Vector3)snapOffset;
+
+            block.CurrentTile = tile;
+
         }
     }
 }

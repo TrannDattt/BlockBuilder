@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Tilemaps;
-using static Unity.Collections.AllocatorManager;
 
 namespace BuilderTool.LevelEditor
 {
@@ -102,6 +100,8 @@ namespace BuilderTool.LevelEditor
             {
                 RemoveSelectedTile(SelectedTiles[0]);
             }
+
+            OnNoTileSelected?.Invoke();
         }
 
         private void Start()
@@ -115,6 +115,11 @@ namespace BuilderTool.LevelEditor
         private void Update()
         {
             GetUserInput();
+
+            if (!_mainCam)
+            {
+                _mainCam = Camera.main;
+            }
         }
 
         private void OnDestroy()

@@ -21,6 +21,8 @@ namespace BuilderTool.LevelEditor
         //[SerializeReference]
         public ATileAttribute CurTileAttribute { get; private set; }
         public ETileType TileType { get; private set; }
+        public int GridX { get; set; }
+        public int GridY { get; set; }
         public bool CanContainBlock => CurTileAttribute.CanContainBlock;
         public bool IsEmpty { get; private set; }
 
