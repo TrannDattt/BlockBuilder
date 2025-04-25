@@ -22,6 +22,7 @@ namespace BuilderTool.LevelEditor
         public EColor SecondaryColor { get; private set; }
         public bool ContainKey { get; private set; }
         public bool ContainStar { get; private set; }
+        public EditorTile CurrentTile { get; set; }
 
         private Camera _mainCamera;
         private Vector3 _offsetToPointer;

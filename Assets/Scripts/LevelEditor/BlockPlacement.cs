@@ -92,6 +92,9 @@ namespace BuilderTool.LevelEditor
         {
             var snapOffset = new Vector2(tile.transform.position.x - block.BlockCoreUnit.transform.position.x, tile.transform.position.y - block.BlockCoreUnit.transform.position.y);
             block.transform.position += (Vector3)snapOffset;
+
+            block.CurrentTile = tile;
+
         }
     }
 }
