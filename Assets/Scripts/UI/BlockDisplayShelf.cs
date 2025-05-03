@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace BuilderTool.LevelEditor
 {
-    public class BlockDisplayShelf : MonoBehaviour
+    public class BlockDisplayShelf : Singleton<BlockDisplayShelf>
     {
         [SerializeField] private GameObject _displayShelf;
 
@@ -14,6 +14,14 @@ namespace BuilderTool.LevelEditor
         [SerializeField] private DisplayedItem _lShapeBlock;
 
         private Camera _mainCam;
+
+        public void OpenShelf(){
+            _displayShelf.SetActive(true);
+        }
+
+        public void CloseShelf(){
+            _displayShelf.SetActive(false);
+        }
 
         private void SpawnBlock(DisplayedItem item)
         {
@@ -27,27 +35,21 @@ namespace BuilderTool.LevelEditor
             return worldPos;
         }
 
-        private void Start()
+        private void OnEnable()
         {
             _crossBlock.OnItemClick += SpawnBlock;
             _squareBlock.OnItemClick += SpawnBlock;
             _lShapeBlock.OnItemClick += SpawnBlock;
 
             _mainCam = Camera.main;
-            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        void OnDisable()
         {
-            var isVisible = SceneManager.GetActiveScene().name != "SceneTester";
-            _displayShelf.SetActive(isVisible);
+            _crossBlock.OnItemClick -= SpawnBlock;
+            _squareBlock.OnItemClick -= SpawnBlock;
+            _lShapeBlock.OnItemClick -= SpawnBlock;
 
-            _mainCam = Camera.main;
-        }
-
-        private void OnDestroy()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
         }
     }
 }

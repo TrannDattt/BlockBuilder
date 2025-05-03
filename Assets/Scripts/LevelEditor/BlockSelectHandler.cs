@@ -57,6 +57,11 @@ namespace BuilderTool.LevelEditor
         {
             block = null;
             var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
+
+            if(TileSelectHandler.Instance.SelectedTiles.Count > 0){
+                RemoveAllSelectedBlocks();
+            }
+
             var hit = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity, LayerMask.GetMask("Block"));
 
             if (hit.collider)

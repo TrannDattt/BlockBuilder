@@ -65,13 +65,8 @@ namespace BuilderTool.LevelEditor
 
         public void UpdateBlockPos(EditorBlock block, EditorTile tile)
         {
-            //Vector3 worldPos = tile.transform.position;
-            //float x = worldPos.x;
-            //float y = worldPos.y;
-            //Debug.Log($"World Position of the tile: x = {x}, y = {y}");
-            
             int tileIndex = Tiles.IndexOf(tile);
-            Debug.Log("[UpdateBlockPos] Tile Index: " + tileIndex + ", Block: " + block.Shape + ", Tile: " + tile.TileType + ", Position: (" + tile.GridX + "," + tile.GridY + ")");
+            // Debug.Log("[UpdateBlockPos] Tile Index: " + tileIndex + ", Block: " + block.Shape + ", Tile: " + tile.TileType + ", Position: (" + tile.GridX + "," + tile.GridY + ")");
 
             if (BlockDict.ContainsKey(block))
             {
@@ -96,71 +91,6 @@ namespace BuilderTool.LevelEditor
         private void Start()
         {
             CreateNewField();
-            AssignGridCoordinatesToTiles(); 
-            DebugTileGridInfo();
-            //for (int y = 0; y < FIELD_HEIGHT; y++)
-            //{
-            //    for (int x = 0; x < FIELD_WIDTH; x++)
-            //    {
-            //        int index = y * FIELD_WIDTH + x;
-            //        if (index < Tiles.Count)
-            //        {
-            //            Tiles[index].GridX = x;
-            //            Tiles[index].GridY = y;
-            //        }
-            //    }
-            //}
-        }
-        public void ExportBlockDataToLevelHolder()
-        {
-            List<Block3DData> block3DList = new();
-
-            foreach (var entry in BlockDict)
-            {
-                EditorBlock block = entry.Key;
-                EditorTile tile = entry.Value;
-
-                Vector3 blockPosition = new Vector3(tile.GridX, -tile.GridY, 0);
-                block3DList.Add(new Block3DData(block.Shape, blockPosition));
-            }
-
-            // Gửi danh sách block vào LevelDataHolder
-            LevelDataHolder.Instance.SetBlock3DList(block3DList);
-
-            Debug.Log($"[Export] Đã export {block3DList.Count} block sang LevelDataHolder");
-        }
-
-        public void DebugTileGridInfo()
-        {
-            for (int i = 0; i < Tiles.Count; i++)
-            {
-                var tile = Tiles[i];
-                //Debug.Log($"[Tile Info] Index: {i}, Grid: ({tile.GridX},{tile.GridY}), WorldPos: {tile.transform.position}");
-            }
-        }
-
-        private void AssignGridCoordinatesToTiles()
-        {
-            float cellSize = 1f;
-
-            for (int y = 0; y < FIELD_HEIGHT; y++)
-            {
-                for (int x = 0; x < FIELD_WIDTH; x++)
-                {
-                    int index = y * FIELD_WIDTH + x;
-                    if (index < Tiles.Count)
-                    {
-                        Tiles[index].GridX = x;
-                        Tiles[index].GridY = y;
-
-                        //float worldX = x * cellSize;
-                        //float worldY = -y * cellSize;
-                        //Tiles[index].transform.position = new Vector3(worldX, worldY, 0);
-
-                        //Debug.Log($"[AssignGrid] Tile index {index} - Grid({x},{y}) -> WorldPos({worldX},{worldY})");
-                    }
-                }
-            }
         }
     }
 }

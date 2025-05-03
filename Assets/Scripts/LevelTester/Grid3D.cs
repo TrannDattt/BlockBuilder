@@ -1,322 +1,198 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System;
-using System.Linq;
-using UnityEngine.SceneManagement; // Để kiểm tra tên scene
+using BuilderTool.Helpers;
+using BuilderTool.LevelEditor;
+using BuilderTool.Enums;
 
-public class Grid3D : MonoBehaviour
+public class Grid3D : Singleton<Grid3D>
 {
-    public int XGrid { get; set; } // Kích thước lưới X (Width) - Để script khác có thể set hoặc được load
-    public int YGrid { get; set; } // Kích thước lưới Y (Height) - Để script khác có thể set hoặc được load
-    public float GridSpaceSize = 1f; // Khoảng cách giữa các ô grid
-    public float BlockHeight = 0.5f; // Chiều cao của block so với ground
+    [SerializeField] private Tile3D _tilePreb;
+    [SerializeField] private Wall3D _wallPreb;
+    [SerializeField] private Wall3D _cornerPreb;
+    [SerializeField] private Door3D _doorPreb;
+    [SerializeField] private Pillar3D _pillarPreb;
 
-    [SerializeField] private GameObject tilePrefab; // Prefab Tile chứa Ground, Door, Block
-    [SerializeField] private Transform gridParent;
+    private Tile3D[,] _floor3D;
 
-    [Serializable]
-    public class BlockPrefabPair
-    {
-        public string blockId;
-        public GameObject prefab;
+    private int _floorHeight => _floor3D.GetLength(0);
+    private int _floorWidth => _floor3D.GetLength(1);
+
+    public void Geneate3DGrid(){
+        GenerateFloor(EditorField.Instance.Tiles);
+        GenerateWall();
+        GenerateBlock();
+        GenerateObstacle();
     }
 
-    [SerializeField] private List<BlockPrefabPair> blockPrefabsList = new List<BlockPrefabPair>();
-    private Dictionary<string, GameObject> blockPrefabs = new Dictionary<string, GameObject>();
+    private void GenerateFloor(List<EditorTile> tiles){
+        _floor3D = new Tile3D[15, 15];
 
-    private GameObject[,,] grid3D; // Mảng 3D lưu trữ các gameObject trong grid
+        for(int row = 0; row < _floorHeight; row++){
+            for(int col = 0; col < _floorWidth; col++){
+                var tile = tiles[row * _floorHeight + col];
+                var tilePos = new Vector2(-_floorWidth / 2 + col, -_floorHeight / 2 + row);
 
-    // Tên của scene chỉnh sửa level (cần được thiết lập trong Inspector hoặc code)
-    [SerializeField] private string editorSceneName = "SceneEditor"; // Thay "SceneEditor" bằng tên scene chỉnh sửa của bạn
-    // Tên của scene test level (cần được thiết lập trong Inspector hoặc code)
-    [SerializeField] private string testSceneName = "SceneTester"; // Thay "SceneTester" bằng tên scene test của bạn
-
-    private void Awake()
-    {
-        InitializeBlockPrefabs();
+                if(tile.TileType != ETileType.Empty)
+                {
+                    _floor3D[row, col] = Instantiate(_tilePreb, tilePos, Quaternion.identity);
+                    _floor3D[row, col].InitTile(tile);
+                    _floor3D[row, col].transform.SetParent(transform);
+                }
+            }
+        }
     }
 
-    private void InitializeBlockPrefabs()
-    {
-        blockPrefabs.Clear();
-        foreach (var pair in blockPrefabsList)
-        {
-            if (!string.IsNullOrEmpty(pair.blockId) && pair.prefab != null && !blockPrefabs.ContainsKey(pair.blockId))
-            {
-                blockPrefabs.Add(pair.blockId, pair.prefab);
+    private void GenerateWall(){
+        for(int row = 0; row < _floorHeight; row++){
+            for(int col = 0; col < _floorWidth; col++){
+                if(!_floor3D[row, col]){
+                    continue;
+                }
+
+                int index = row * _floorHeight + col;
+
+                // Place walls/doors
+                if(!CheckHaveTile(row - 1, col)){
+                    PlaceWall(_floor3D[row, col], index, EDirection.Down);
+                }
+
+                if(!CheckHaveTile(row + 1, col)){
+                    PlaceWall(_floor3D[row, col], index, EDirection.Up);
+                }
+
+                if(!CheckHaveTile(row, col - 1)){
+                    PlaceWall(_floor3D[row, col], index, EDirection.Left);
+                }
+
+                if(!CheckHaveTile(row, col + 1)){
+                    PlaceWall(_floor3D[row, col], index, EDirection.Right);
+                }
+
+                // Place corners
+                if(!CheckHaveTile(row - 1, col - 1) && !CheckHaveTile(row - 1, col) && !CheckHaveTile(row, col - 1)){
+                    PlaceCorner(_floor3D[row, col], EDirection.Down, EDirection.Left);
+                }
+
+                if(!CheckHaveTile(row - 1, col + 1) && !CheckHaveTile(row - 1, col) && !CheckHaveTile(row, col + 1)){
+                    PlaceCorner(_floor3D[row, col], EDirection.Down, EDirection.Right);
+                }
+
+                if(!CheckHaveTile(row + 1, col - 1) && !CheckHaveTile(row + 1, col) && !CheckHaveTile(row, col - 1)){
+                    PlaceCorner(_floor3D[row, col], EDirection.Up, EDirection.Left);
+                }
+
+                if(!CheckHaveTile(row + 1, col + 1) && !CheckHaveTile(row + 1, col) && !CheckHaveTile(row, col + 1)){
+                    PlaceCorner(_floor3D[row, col], EDirection.Up, EDirection.Right);
+                }
             }
         }
     }
 
-    public void ClearGrid()
-    {
-        // Xóa tất cả các gameObject con hiện có
-        while (transform.childCount > 0)
-        {
-            DestroyImmediate(transform.GetChild(0).gameObject);
-        }
-        // Reset mảng grid
-        grid3D = null;
-        XGrid = 0;
-        YGrid = 0;
+    private bool CheckHaveTile(int row, int col){
+        return col >= 0
+               && col < _floorWidth
+               && row >= 0
+               && row < _floorHeight
+               && _floor3D[row, col] != null;
     }
 
-    void Start()
-    {
-        // Kiểm tra tên của scene hiện tại
-        string currentSceneName = SceneManager.GetActiveScene().name;
+    private void PlaceWall(Tile3D tile, int tileIndex, EDirection placeDir){
+        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
+        float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
-        if (currentSceneName == testSceneName)
+        Vector2 offset = placeDir switch {
+            EDirection.Up => new Vector2(0, halfSize),
+            EDirection.Down => new Vector2(0, -halfSize),
+            EDirection.Left => new Vector2(-halfSize, 0),
+            EDirection.Right => new Vector2(halfSize, 0),
+            _ => Vector2.zero,
+        };
+
+        Quaternion rotation = placeDir switch {
+            EDirection.Up => Quaternion.identity,
+            EDirection.Down => Quaternion.Euler(new Vector3(0, 0, 180)),
+            EDirection.Left => Quaternion.Euler(new Vector3(0, 0, 90)),
+            EDirection.Right => Quaternion.Euler(new Vector3(0, 0, 270)),
+            _ => Quaternion.identity,
+        };
+
+        var pos = tile.transform.position + (Vector3)offset;
+
+        if(tile.TileType == ETileType.Door)
         {
-            // Nếu là scene test, load level từ LevelDataHolder
-            LoadLevelFromDataHolder();
-        }
-        else if (currentSceneName == editorSceneName)
-        {
-            Debug.Log("Grid3D đang chạy trong scene chỉnh sửa.");
-            XGrid = 15; // Thiết lập chiều rộng là 15
-            YGrid = 15; // Thiết lập chiều cao là 15
-            grid3D = new GameObject[XGrid, 2, YGrid];
-            Debug.Log($"Grid3D trong Editor: grid3D đã được khởi tạo với kích thước {XGrid}x{YGrid}");
-        }
-        else
-        {
-            Debug.LogWarning($"Grid3D đang chạy trong scene không xác định: {currentSceneName}");
-        }
-    }
+            var doorTile = EditorField.Instance.Tiles[tileIndex];
+            var color = (doorTile.CurTileAttribute as DoorTile).DoorDict[placeDir];
 
-    public void LoadLevelFromDataHolder()
-    {
-        Debug.Log("--- Bắt đầu LoadLevelFromDataHolder ---");
-
-        LevelDataHolder dataHolder = FindObjectOfType<LevelDataHolder>();
-        if (dataHolder == null)
-        {
-            Debug.LogError("Không tìm thấy LevelDataHolder trong scene!");
-            Debug.Log("--- Kết thúc LoadLevelFromDataHolder ---");
-            return;
-        }
-
-        XGrid = dataHolder.GridWidth;
-        YGrid = dataHolder.GridHeight;
-        List<TileData> levelData = dataHolder.levelData;
-
-        Debug.Log($"Kích thước grid lấy từ LevelDataHolder: Width={XGrid}, Height={YGrid}");
-
-        if (XGrid <= 0 || YGrid <= 0)
-        {
-            Debug.LogError("Kích thước grid không hợp lệ.");
-            Debug.Log("--- Kết thúc LoadLevelFromDataHolder ---");
-            return;
-        }
-
-        grid3D = new GameObject[XGrid, 2, YGrid];
-
-        if (gridParent != null)
-        {
-            transform.SetParent(gridParent, false);
-            Debug.Log($"Đã đặt parent của Grid3D thành: {gridParent.name}");
-        }
-        else
-        {
-            Debug.Log("Không có Grid Parent được gán.");
-        }
-
-        if (tilePrefab == null)
-        {
-            Debug.LogError("Tile prefab chưa được gán trong Inspector!");
-            Debug.Log("--- Kết thúc LoadLevelFromDataHolder ---");
-            return;
-        }
-        Debug.Log($"Tile prefab được sử dụng: {tilePrefab.name}");
-
-        for (int i = 0; i < levelData.Count; i++)
-        {
-            TileData data = levelData[i];
-
-            if (data.tileType != "empty") // Chỉ tạo GameObject nếu không phải là empty
+            if(color != EColor.Black)
             {
-                Vector3 worldPos = GetWorldPosition(data.x, data.y);
-                GameObject newTile = Instantiate(tilePrefab, worldPos, Quaternion.identity);
-                newTile.transform.SetParent(transform, true);
-                newTile.name = $"Tile_X{data.x}_Y{data.y}";
-
-                Transform groundChild = newTile.transform.Find("Ground");
-                Transform doorChild = newTile.transform.Find("Door");
-                Transform blockChild = newTile.transform.Find("Block");
-
-                if (data.tileType == "ground" && groundChild != null)
-                {
-                    groundChild.gameObject.SetActive(true);
-                    grid3D[data.x, 0, data.y] = newTile;
-                    //Debug.Log($"Đã tạo Ground tile tại grid: x={data.x}, y={data.y}, world position={worldPos}");
-                }
-                else if (data.tileType == "door" && doorChild != null)
-                {
-                    doorChild.gameObject.SetActive(true);
-                    grid3D[data.x, 0, data.y] = newTile;
-                    //Debug.Log($"Đã tạo Door tile tại grid: x={data.x}, y={data.y}, world position={worldPos}");
-                }
-                else if (data.tileType == "block" && blockChild != null)
-                {
-                    blockChild.gameObject.SetActive(true);
-                    grid3D[data.x, 0, data.y] = newTile; 
-                    grid3D[data.x, 1, data.y] = newTile; 
-                    //Debug.Log($"Đã tạo Block '{data.blockId}' tại grid: x={data.x}, y={data.y}, world position={worldPos}");
-                }
+                var spawnedDoor = Instantiate(_doorPreb, pos, rotation, transform);
+                spawnedDoor.InitDoor(color);
             }
-            //else
-            //{
-            //    //Debug.Log($"Ô grid x={data.x}, y={data.y} là empty.");
-            //}
+            else{
+                var spawnedWall = Instantiate(_wallPreb, pos, rotation, transform);
+                spawnedWall.InitWall();
+            }
         }
-
-        Debug.Log("--- Hoàn tất LoadLevelFromDataHolder ---");
-    }
-
-    // Phương thức thêm block prefab vào từ điển
-    public void AddBlockPrefab(string blockId, GameObject prefab)
-    {
-        if (!blockPrefabs.ContainsKey(blockId))
-        {
-            blockPrefabs.Add(blockId, prefab);
-
-            // Cập nhật cả danh sách để hiển thị trong Inspector
-            BlockPrefabPair newPair = new BlockPrefabPair { blockId = blockId, prefab = prefab };
-            blockPrefabsList.Add(newPair);
+        else{
+            var spawnedWall = Instantiate(_wallPreb, pos, rotation, transform);
+            spawnedWall.InitWall();
         }
     }
 
-    //// Phương thức lấy GameObject tại một vị trí cụ thể
-    //public GameObject GetTileAt(int x, int y, int z)
-    //{
-    //    if (x >= 0 && x < XGrid && y >= 0 && y < 2 && z >= 0 && z < YGrid)
-    //    {
-    //        return grid3D[x, y, z];
-    //    }
-    //    return null;
-    //}
+    private void PlaceCorner(Tile3D tile, EDirection verticalDir, EDirection horizontalDir){
+        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
+        float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
-    //// Phương thức lấy block prefab theo ID
-    //public GameObject GetBlockPrefab(string blockId)
-    //{
-    //    if (blockPrefabs.ContainsKey(blockId))
-    //    {
-    //        return blockPrefabs[blockId];
-    //    }
-    //    return null;
-    //}
+        Vector3 verticalOffset = verticalDir switch {
+            EDirection.Up => new Vector3(0, halfSize),
+            EDirection.Down => new Vector3(0, -halfSize),
+            _ => Vector3.zero,
+        };
 
-    // Phương thức lấy tọa độ thế giới từ tọa độ grid (cho 2D XY)
-    public Vector3 GetWorldPosition(int x, int y, bool isBlock = false)
-    {
-        float z = 0f; 
-        float yPos = isBlock ? BlockHeight : 0f; // Vẫn giữ BlockHeight nếu bạn muốn block có độ cao
-        return new Vector3((x + (grid3D != null ? grid3D.GetLength(0) > 0 ? 0 : 0 : 0)) * GridSpaceSize, (y + (grid3D != null ? grid3D.GetLength(2) > 0 ? 0 : 0 : 0)) * GridSpaceSize * -1f + yPos, z);
+        Vector3 horizontalOffset = horizontalDir switch {
+            EDirection.Left => new Vector3(-halfSize, 0),
+            EDirection.Right => new Vector3(halfSize, 0),
+            _ => Vector3.zero,
+        };
+
+        var rotation = verticalDir == EDirection.Up && horizontalDir == EDirection.Left ? Quaternion.identity :
+            verticalDir == EDirection.Up && horizontalDir == EDirection.Right ? Quaternion.Euler(new Vector3(0, 0, -90)) :
+            verticalDir == EDirection.Down && horizontalDir == EDirection.Left ? Quaternion.Euler(new Vector3(0, 0, 90)) :
+            Quaternion.Euler(new Vector3(0, 0, 180));
+
+        Vector2 pos = tile.transform.position + verticalOffset + horizontalOffset;
+        var spawnedCorner = Instantiate(_cornerPreb, pos, rotation, transform);
     }
-        
-    // Thêm event để thông báo khi grid thay đổi
-    public delegate void GridChangedHandler();
-    public event GridChangedHandler OnGridChanged;
 
-    //// Thêm phương thức để đặt block mới
-    //public void PlaceBlock(int x, int y, string blockId)
-    //{
-    //    if (x < 0 || x >= XGrid || y < 0 || y >= YGrid)
-    //    {
-    //        Debug.LogWarning($"Vị trí ({x}, {y}) nằm ngoài grid!");
-    //        return;
-    //    }
+    private void GenerateBlock(){
+        foreach(var block in EditorField.Instance.BlockDict.Keys){
+            int tileIndex = EditorField.Instance.Tiles.IndexOf(EditorField.Instance.BlockDict[block]);
+            Vector3 offset = new(0, 0, -.2f);
+            Vector3 pos = _floor3D[tileIndex / _floorHeight, tileIndex % _floorWidth].transform.position + offset;
 
-    //    // Kiểm tra xem có ground ở vị trí này không
-    //    if (grid3D[x, 0, y] == null)
-    //    {
-    //        // Tạo ground nếu chưa có
-    //        Vector3 groundPosition = GetWorldPosition(x, y);
-    //        if (tilePrefab != null)
-    //        {
-    //            GameObject newTile = Instantiate(tilePrefab, groundPosition, Quaternion.identity);
-    //            newTile.transform.SetParent(transform, false);
-    //            newTile.name = $"Tile_X{x}_Y{y}";
-    //            Transform groundChild = newTile.transform.Find("Ground");
-    //            if (groundChild != null) groundChild.gameObject.SetActive(true);
-    //            grid3D[x, 0, y] = newTile;
-    //        }
-    //        else
-    //        {
-    //            Debug.LogWarning("Tile prefab chưa được gán!");
-    //            return;
-    //        }
-    //    }
+            BlockSpawner3D.Instance.SpawnBlock(block, pos);
+        }
+    }
 
-    //    // Xóa block cũ nếu có
-    //    if (grid3D[x, 1, y] != null)
-    //    {
-    //        Destroy(grid3D[x, 1, y]);
-    //    }
+    // TODO: Generate mechanic here
+    private void GenerateObstacle(){
+        PlacePillar();
+    }
 
-    //    // Tạo block mới
-    //    if (blockId != null)
-    //    {
-    //        if (blockPrefabs.ContainsKey(blockId))
-    //        {
-    //            Vector3 blockPosition = GetWorldPosition(x, y, true);
-    //            GameObject newBlock = Instantiate(blockPrefabs[blockId], blockPosition, Quaternion.identity);
-    //            newBlock.transform.SetParent(transform, false);
-    //            newBlock.name = $"Block_{blockId}_X{x}_Y{y}";
-    //            grid3D[x, 1, y] = newBlock;
-    //        }
-    //        else
-    //        {
-    //            Debug.LogWarning($"Không tìm thấy prefab cho BlockId: {blockId}");
-    //        }
-    //    }
+    private void PlacePillar(){
+        for(int row = 0; row < _floorHeight; row++){
+            for(int col = 0; col < _floorWidth; col++){
+                if(!_floor3D[row, col] || _floor3D[row, col].TileType != ETileType.BlockNode){
+                    continue;
+                }
 
-    //    // Thông báo grid đã thay đổi
-    //    OnGridChanged?.Invoke();
-    //}
-
-    //// Phương thức để xóa block
-    //public void RemoveBlock(int x, int y)
-    //{
-    //    if (x < 0 || x >= XGrid || y < 0 || y >= YGrid)
-    //    {
-    //        return;
-    //    }
-
-    //    if (grid3D[x, 1, y] != null)
-    //    {
-    //        Destroy(grid3D[x, 1, y]);
-    //        grid3D[x, 1, y] = null;
-
-    //        // Thông báo grid đã thay đổi
-    //        OnGridChanged?.Invoke();
-    //    }
-    //}
-
-    //// Phương thức để xóa ground và block
-    //public void RemoveTile(int x, int y)
-    //{
-    //    if (x < 0 || x >= XGrid || y < 0 || y >= YGrid)
-    //    {
-    //        return;
-    //    }
-
-    //    // Xóa block trước nếu có
-    //    if (grid3D[x, 1, y] != null)
-    //    {
-    //        Destroy(grid3D[x, 1, y]);
-    //        grid3D[x, 1, y] = null;
-    //    }
-
-    //    // Xóa ground
-    //    if (grid3D[x, 0, y] != null)
-    //    {
-    //        Destroy(grid3D[x, 0, y]);
-    //        grid3D[x, 0, y] = null;
-    //    }
-
-    //    // Thông báo grid đã thay đổi
-    //    OnGridChanged?.Invoke();
-    //}
+                var tileIndex = row * _floorHeight + col;
+                var tileAttribute = EditorField.Instance.Tiles[tileIndex].CurTileAttribute as BlockTile;
+                var spawnPos = _floor3D[row, col].transform.position;
+                
+                var spawnedPillar = Instantiate(_pillarPreb, spawnPos, Quaternion.identity, transform);
+                spawnedPillar.InitPillar(tileAttribute.Color);
+            }
+        }
+    }
 }

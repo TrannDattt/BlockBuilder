@@ -1,9 +1,6 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
 using BuilderTool.UIElement;
-using System;
-using TMPro;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 namespace BuilderTool.LevelEditor

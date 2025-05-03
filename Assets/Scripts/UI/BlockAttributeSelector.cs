@@ -9,47 +9,48 @@ namespace BuilderTool.LevelEditor
     public class BlockAttributeSelector : Singleton<BlockAttributeSelector>
     {
         [SerializeField] private GameObject _attributeSelectorMenu;
+        [SerializeField] private Button _deleteBlockBtn;
 
+        [Header("Color")]
         [SerializeField] private ColorDropdown _primaryColorSelectorDropdown;
         [SerializeField] private ColorDropdown _secondaryColorSelectorDropdown;
 
+        [Header("Attribute Toggle")]
         [SerializeField] private Toggle _containStarToggle;
         [SerializeField] private Toggle _containKeyToggle;
 
-        [SerializeField] private Button _deleteBlockBtn;
+        [Header("Contraint")]
+        [SerializeField] private InputField _freezeCount;
+        [SerializeField] private InputField _boomCount;
+        [SerializeField] private InputField _chainCount;
+
+        [SerializeField] private DirectionContrainedDropdown _directionContrainedDropdown;
 
         public void OpenSelectAttributeMenu(EditorBlock block)
         {
             _attributeSelectorMenu.SetActive(true);
 
-            OpenPrimaryColorSelector(block);
-            OpenSecondaryColorSelector(block);
-            OpenStarToggle(block);
-            OpenKeyToggle(block);
+            OpenColorSelector(block);
+            OpenToggle(block);
         }
 
-        public void OpenPrimaryColorSelector(EditorBlock block)
+        public void OpenColorSelector(EditorBlock block)
         {
             var priColor = block.PrimaryColor;
-
-            _primaryColorSelectorDropdown.value = (int)priColor;
-        }
-
-        public void OpenSecondaryColorSelector(EditorBlock block)
-        {
             var secColor = block.SecondaryColor;
 
+            _primaryColorSelectorDropdown.value = (int)priColor;
             _secondaryColorSelectorDropdown.value = (int)secColor;
         }
 
-        public void OpenStarToggle(EditorBlock block)
+        public void OpenToggle(EditorBlock block)
         {
             _containStarToggle.isOn = block.ContainStar;
+            _containKeyToggle.isOn = block.ContainKey;
         }
 
-        public void OpenKeyToggle(EditorBlock block)
-        {
-            _containKeyToggle.isOn = block.ContainKey;
+        public void OpenContraintSelector(EditorBlock block){
+            // TODO: Get block attribute
         }
 
         public void CloseMenu()
