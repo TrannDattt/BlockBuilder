@@ -30,8 +30,8 @@ namespace BuilderTool.UIElement
         public int LevelTime => int.TryParse(_timeInput.text, out int result) ? result : -1;
         public EDifficulty LevelDifficulty => (EDifficulty)_difficultiDropdown.value;
 
-        private Scene _testerScene;
-        private Scene _editorScene;
+        private string _testerScene = "SceneTester";
+        private string _editorScene = "SceneEditor";
 
         public bool CheckLevelInfo()
         {
@@ -69,22 +69,29 @@ namespace BuilderTool.UIElement
             BlockAttributeSelector.Instance.CloseMenu();
             BlockDisplayShelf.Instance.CloseShelf();
 
-            await DisableScene(SceneManager.GetSceneByName("SceneEditor"));
-            AsyncOperation loadSceneTask = SceneManager.LoadSceneAsync("SceneTester", LoadSceneMode.Additive);
+            await DisableScene(SceneManager.GetSceneByName(_editorScene));
+
+            if(SceneManager.GetSceneByName(_testerScene).isLoaded){
+                SceneManager.UnloadSceneAsync(SceneManager.GetSceneByName(_testerScene));
+            }
+
+            AsyncOperation loadSceneTask = SceneManager.LoadSceneAsync(_testerScene, LoadSceneMode.Additive);
 
             while(!loadSceneTask.isDone){
                 await Task.Yield();
             }
 
-            Grid3D.Instance.Geneate3DGrid();
+            await Grid3D.Instance.Geneate3DGrid();
+            CameraController.Instance.ChangeToTestMode();
         }
 
         private async void DesignLevel()
         {
-            SceneManager.UnloadSceneAsync("SceneTester");
-            await EnableScene(SceneManager.GetSceneByName("SceneEditor"));
+            SceneManager.UnloadSceneAsync(_testerScene);
+            await EnableScene(SceneManager.GetSceneByName(_editorScene));
 
             BlockDisplayShelf.Instance.OpenShelf();
+            CameraController.Instance.ChangeToDesignMode();
         }
 
         private async Task EnableScene(Scene scene)

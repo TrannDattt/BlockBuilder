@@ -3,9 +3,16 @@ using System.Collections.Generic;
 using BuilderTool.Helpers;
 using BuilderTool.LevelEditor;
 using BuilderTool.Enums;
+using System.Threading.Tasks;
 
 public class Grid3D : Singleton<Grid3D>
 {
+    [Header("Object Parents")]
+    [SerializeField] private Transform _tileParent;
+    [SerializeField] private Transform _wallParent;
+    [SerializeField] private Transform _pillarParent;
+
+    [Header("Object Prefabs")]
     [SerializeField] private Tile3D _tilePreb;
     [SerializeField] private Wall3D _wallPreb;
     [SerializeField] private Wall3D _cornerPreb;
@@ -14,42 +21,75 @@ public class Grid3D : Singleton<Grid3D>
 
     private Tile3D[,] _floor3D;
 
-    private int _floorHeight => _floor3D.GetLength(0);
-    private int _floorWidth => _floor3D.GetLength(1);
+    public int FloorMaxHeight => _floor3D.GetLength(0);
+    public int FloorMaxWidth => _floor3D.GetLength(1);
 
-    public void Geneate3DGrid(){
+    public void GetFloorSize(out float height, out float width, out Vector2 center){
+        Vector2 startIndex = new(Mathf.Infinity, Mathf.Infinity);
+        Vector2 endIndex = new();
+
+        for(int row = 0; row < FloorMaxHeight; row++){
+            for(int col = 0; col < FloorMaxWidth; col++){
+                if(_floor3D[row, col] != null)
+                {
+                    if(startIndex.y > row){
+                        startIndex.y = row;
+                    }
+
+                    if(startIndex.x > col){
+                        startIndex.x = col;
+                    }
+
+                    if(endIndex.y < row){
+                        endIndex.y = row;
+                    }
+
+                    if(endIndex.x < col){
+                        endIndex.x = col;
+                    }
+                }
+            }
+        }
+
+        height = endIndex.y - startIndex.y + 1;
+        width = endIndex.x - startIndex.x + 1;
+        center = new((int)(width - 1) / 2 + startIndex.x, (int)(height - 1) / 2 + startIndex.y);
+    }
+
+    public async Task Geneate3DGrid()
+    {
         GenerateFloor(EditorField.Instance.Tiles);
         GenerateWall();
         GenerateBlock();
         GenerateObstacle();
+        await Task.Yield();
     }
 
     private void GenerateFloor(List<EditorTile> tiles){
         _floor3D = new Tile3D[15, 15];
 
-        for(int row = 0; row < _floorHeight; row++){
-            for(int col = 0; col < _floorWidth; col++){
-                var tile = tiles[row * _floorHeight + col];
-                var tilePos = new Vector2(-_floorWidth / 2 + col, -_floorHeight / 2 + row);
+        for(int row = 0; row < FloorMaxHeight; row++){
+            for(int col = 0; col < FloorMaxWidth; col++){
+                var tile = tiles[row * FloorMaxHeight + col];
+                var tilePos = new Vector2(-FloorMaxWidth / 2 + col, -FloorMaxHeight / 2 + row);
 
                 if(tile.TileType != ETileType.Empty)
                 {
-                    _floor3D[row, col] = Instantiate(_tilePreb, tilePos, Quaternion.identity);
+                    _floor3D[row, col] = Instantiate(_tilePreb, tilePos, Quaternion.identity, _tileParent);
                     _floor3D[row, col].InitTile(tile);
-                    _floor3D[row, col].transform.SetParent(transform);
                 }
             }
         }
     }
 
     private void GenerateWall(){
-        for(int row = 0; row < _floorHeight; row++){
-            for(int col = 0; col < _floorWidth; col++){
+        for(int row = 0; row < FloorMaxHeight; row++){
+            for(int col = 0; col < FloorMaxWidth; col++){
                 if(!_floor3D[row, col]){
                     continue;
                 }
 
-                int index = row * _floorHeight + col;
+                int index = row * FloorMaxHeight + col;
 
                 // Place walls/doors
                 if(!CheckHaveTile(row - 1, col)){
@@ -90,14 +130,14 @@ public class Grid3D : Singleton<Grid3D>
 
     private bool CheckHaveTile(int row, int col){
         return col >= 0
-               && col < _floorWidth
+               && col < FloorMaxWidth
                && row >= 0
-               && row < _floorHeight
+               && row < FloorMaxHeight
                && _floor3D[row, col] != null;
     }
 
     private void PlaceWall(Tile3D tile, int tileIndex, EDirection placeDir){
-        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
+        var tileCollider = tile.GetComponentInChildren<BoxCollider2D>();
         float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
         Vector2 offset = placeDir switch {
@@ -125,22 +165,22 @@ public class Grid3D : Singleton<Grid3D>
 
             if(color != EColor.Black)
             {
-                var spawnedDoor = Instantiate(_doorPreb, pos, rotation, transform);
+                var spawnedDoor = Instantiate(_doorPreb, pos, rotation, _wallParent);
                 spawnedDoor.InitDoor(color);
             }
             else{
-                var spawnedWall = Instantiate(_wallPreb, pos, rotation, transform);
+                var spawnedWall = Instantiate(_wallPreb, pos, rotation, _wallParent);
                 spawnedWall.InitWall();
             }
         }
         else{
-            var spawnedWall = Instantiate(_wallPreb, pos, rotation, transform);
+            var spawnedWall = Instantiate(_wallPreb, pos, rotation, _wallParent);
             spawnedWall.InitWall();
         }
     }
 
     private void PlaceCorner(Tile3D tile, EDirection verticalDir, EDirection horizontalDir){
-        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
+        var tileCollider = tile.GetComponentInChildren<BoxCollider2D>();
         float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
         Vector3 verticalOffset = verticalDir switch {
@@ -161,14 +201,14 @@ public class Grid3D : Singleton<Grid3D>
             Quaternion.Euler(new Vector3(0, 0, 180));
 
         Vector2 pos = tile.transform.position + verticalOffset + horizontalOffset;
-        var spawnedCorner = Instantiate(_cornerPreb, pos, rotation, transform);
+        var spawnedCorner = Instantiate(_cornerPreb, pos, rotation, _wallParent);
     }
 
     private void GenerateBlock(){
         foreach(var block in EditorField.Instance.BlockDict.Keys){
             int tileIndex = EditorField.Instance.Tiles.IndexOf(EditorField.Instance.BlockDict[block]);
-            Vector3 offset = new(0, 0, -.2f);
-            Vector3 pos = _floor3D[tileIndex / _floorHeight, tileIndex % _floorWidth].transform.position + offset;
+            Vector3 offset = new(0, 0, -.25f);
+            Vector3 pos = _floor3D[tileIndex / FloorMaxHeight, tileIndex % FloorMaxWidth].transform.position + offset;
 
             BlockSpawner3D.Instance.SpawnBlock(block, pos);
         }
@@ -180,17 +220,17 @@ public class Grid3D : Singleton<Grid3D>
     }
 
     private void PlacePillar(){
-        for(int row = 0; row < _floorHeight; row++){
-            for(int col = 0; col < _floorWidth; col++){
+        for(int row = 0; row < FloorMaxHeight; row++){
+            for(int col = 0; col < FloorMaxWidth; col++){
                 if(!_floor3D[row, col] || _floor3D[row, col].TileType != ETileType.BlockNode){
                     continue;
                 }
 
-                var tileIndex = row * _floorHeight + col;
+                var tileIndex = row * FloorMaxHeight + col;
                 var tileAttribute = EditorField.Instance.Tiles[tileIndex].CurTileAttribute as BlockTile;
                 var spawnPos = _floor3D[row, col].transform.position;
                 
-                var spawnedPillar = Instantiate(_pillarPreb, spawnPos, Quaternion.identity, transform);
+                var spawnedPillar = Instantiate(_pillarPreb, spawnPos, Quaternion.identity, _pillarParent);
                 spawnedPillar.InitPillar(tileAttribute.Color);
             }
         }

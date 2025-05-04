@@ -1,18 +1,17 @@
 using UnityEngine;
 using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using UnityEditor;
 
 public class Block3D : MonoBehaviour{
     public EColor Color {get; private set;}
+    public bool IsCollide {get; private set;}
 
     private MeshRenderer[] _renderers;
-    private Camera _mainCam;
-    private Vector3 offset;
-    private bool _isSelected;
 
     public void InitBlock(EColor color){
         _renderers = GetComponentsInChildren<MeshRenderer>();
-        _mainCam = Camera.main;
+
         ChangeColor(color);
     }
 
@@ -22,30 +21,24 @@ public class Block3D : MonoBehaviour{
         }
     }
 
-    void OnMouseDown()
-    {
-        _isSelected = true;
 
-        // TODO: Collider is on child object, not on block
-        var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-        offset = transform.position - mousePos;
-    }
 
-    void OnMouseUp()
+    void OnCollisionEnter2D(Collision2D collision)
     {
-        _isSelected = false;
-    }
-
-    void Update()
-    {
-        if(_isSelected){
-            var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-            transform.position = offset + mousePos;
+        // foreach (ContactPoint2D contact in collision.contacts){
+        //     var contactPoint = contact.point;
+        //     if(Block3DSelectHandler.Instance.CheckBlockCollide(contactPoint)){
+        //         IsCollide = true;
+        //         return;
+        //     }
+        // }
+        if(collision.collider.gameObject.layer == LayerMask.NameToLayer("Wall")){
+            IsCollide = true;
         }
     }
 
-    void OnCollisionEnter(Collision collision)
+    void OnCollisionExit2D(Collision2D collision)
     {
-        // TODO: Event when block collide with door
+        IsCollide = false;
     }
 }
