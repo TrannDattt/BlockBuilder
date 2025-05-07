@@ -40,9 +40,16 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 			}
 			else
 			{
-				var serializedObject = new SerializedObject(asset);
-				var iterator = serializedObject.GetIterator();
-				ProcessSerializedProperty(iterator, duplicateMode, seenObjects);
+				try
+				{
+					var serializedObject = new SerializedObject(asset);
+					var iterator = serializedObject.GetIterator();
+					ProcessSerializedProperty(iterator, duplicateMode, seenObjects);
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError(ex);
+				}
 			}
 		}
 	
@@ -53,12 +60,15 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 				if (property.propertyType == SerializedPropertyType.ManagedReference)
 				{
 					var managedReferenceValue = property.managedReferenceValue;
+					
 					if (managedReferenceValue != null && !seenObjects.Add(managedReferenceValue))
 					{
+						var refChanged = false;
 						switch (duplicateMode)
 						{
 							case SRDuplicateMode.Null:
 								property.managedReferenceValue = null;
+								refChanged = true;
 								break;
 
 							case SRDuplicateMode.Default:
@@ -66,6 +76,7 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 								if (currentValue == null)
 								{
 									property.managedReferenceValue = null;
+									refChanged = true;
 									break;
 								}
 
@@ -106,20 +117,24 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 											if (field != null)
 											{
 												property.managedReferenceValue = GetDefaultValueFromField(field);
+												refChanged = true;
 											}
 											else
 											{
 												property.managedReferenceValue = null;
+												refChanged = true;
 											}
 										}
 										else
 										{
 											property.managedReferenceValue = null;
+											refChanged = true;
 										}
 									}
 									else
 									{
 										property.managedReferenceValue = null;
+										refChanged = true;
 									}
 								}
 								else
@@ -133,6 +148,7 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 									}
 									
 									property.managedReferenceValue = newInstance;
+									refChanged = true;
 								}
 								break;
 
@@ -143,16 +159,19 @@ namespace SerializeReferenceEditor.Editor.DoubleCleaner
 									var newInstance = CreateDeepCopy(managedReferenceValue);
 									property.managedReferenceValue = newInstance;
 									seenObjects.Add(newInstance);
+									refChanged = true;
 								}
 								catch (Exception e)
 								{
 									Debug.LogError($"Failed to create instance of type {sourceType.Name}: {e.Message}");
 									property.managedReferenceValue = null;
+									refChanged = true;
 								}
 								break;
 						}
 						
-						property.serializedObject.ApplyModifiedProperties();
+						if (refChanged)
+							property.serializedObject.ApplyModifiedProperties();
 					}
 				}
 			}

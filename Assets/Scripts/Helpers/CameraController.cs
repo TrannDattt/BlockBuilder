@@ -1,6 +1,6 @@
-﻿using BuilderTool.Helpers;
+﻿using System;
+using BuilderTool.Helpers;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class CameraController : Singleton<CameraController>
 {
@@ -17,13 +17,15 @@ public class CameraController : Singleton<CameraController>
         Tilting(new Vector3(-30, 0, 0));
         Zooming(GetZoomMult(height, width));
 
-        Vector2 offset = new(-7, -7);
-        Moving(center + offset);
+        if(height > 0 && width > 0){
+            Vector2 offset = new(-7, -7);
+            Moving(center + offset);
+        }
     }
 
     public void ChangeToDesignMode(){
         Tilting(Vector3.zero);
-        Zooming(10);
+        Zooming(_defaultZoomMult);
         Moving(Vector3.zero);
     }
 
@@ -37,10 +39,12 @@ public class CameraController : Singleton<CameraController>
         var floorMaxWidth = Grid3D.Instance.FloorMaxWidth;
 
         if(floorHeight > floorWidth){
-            return zoomRange * floorHeight / floorMaxHeight + _minZoomMult;
+            var zoomMult = zoomRange * floorHeight / floorMaxHeight + _minZoomMult;
+            return Mathf.Clamp(zoomMult, _minZoomMult, _maxZoomMult);
         }
         else{
-            return zoomRange * floorWidth / floorMaxWidth + _minZoomMult;
+            var zoomMult = zoomRange * floorWidth / floorMaxWidth + _minZoomMult;
+            return Mathf.Clamp(zoomMult, _minZoomMult, _maxZoomMult);
         }
     }
 

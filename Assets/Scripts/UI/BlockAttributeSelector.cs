@@ -1,6 +1,7 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
 using BuilderTool.UIElement;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ namespace BuilderTool.LevelEditor
     public class BlockAttributeSelector : Singleton<BlockAttributeSelector>
     {
         [SerializeField] private GameObject _attributeSelectorMenu;
+        [SerializeField] private GameObject _attributeSelectorMenu2;
         [SerializeField] private Button _deleteBlockBtn;
 
         [Header("Color")]
@@ -16,22 +18,24 @@ namespace BuilderTool.LevelEditor
         [SerializeField] private ColorDropdown _secondaryColorSelectorDropdown;
 
         [Header("Attribute Toggle")]
-        [SerializeField] private Toggle _containStarToggle;
-        [SerializeField] private Toggle _containKeyToggle;
+        [SerializeField] private ToolRadioButton _containStarToggle;
+        [SerializeField] private ToolRadioButton _containKeyToggle;
 
         [Header("Contraint")]
-        [SerializeField] private InputField _freezeCount;
-        [SerializeField] private InputField _boomCount;
-        [SerializeField] private InputField _chainCount;
+        [SerializeField] private TMP_InputField _freezeCount;
+        [SerializeField] private TMP_InputField _boomCount;
+        [SerializeField] private TMP_InputField _chainCount;
 
         [SerializeField] private DirectionContrainedDropdown _directionContrainedDropdown;
 
         public void OpenSelectAttributeMenu(EditorBlock block)
         {
             _attributeSelectorMenu.SetActive(true);
+            _attributeSelectorMenu2.SetActive(true);
 
             OpenColorSelector(block);
             OpenToggle(block);
+            OpenContraintSelector(block);
         }
 
         public void OpenColorSelector(EditorBlock block)
@@ -45,8 +49,8 @@ namespace BuilderTool.LevelEditor
 
         public void OpenToggle(EditorBlock block)
         {
-            _containStarToggle.isOn = block.ContainStar;
-            _containKeyToggle.isOn = block.ContainKey;
+            _containStarToggle.ChangeState(block.ContainStar);
+            _containKeyToggle.ChangeState(block.ContainKey);
         }
 
         public void OpenContraintSelector(EditorBlock block){
@@ -56,6 +60,7 @@ namespace BuilderTool.LevelEditor
         public void CloseMenu()
         {
             _attributeSelectorMenu.SetActive(false);
+            _attributeSelectorMenu2.SetActive(false);
         }
 
         private void OnPrimaryColorSelected(int index)
@@ -94,12 +99,13 @@ namespace BuilderTool.LevelEditor
             _primaryColorSelectorDropdown.onValueChanged.AddListener(OnPrimaryColorSelected);
             _secondaryColorSelectorDropdown.onValueChanged.AddListener(OnSecondaryColorSelected);
 
-            _containStarToggle.onValueChanged.AddListener(OnContainStarToggled);
-            _containKeyToggle.onValueChanged.AddListener(OnContainKeyToggled);
+            // _containStarToggle.OnButtonClicked += OnContainStarToggled;
+            // _containKeyToggle.onValueChanged.AddListener(OnContainKeyToggled);
 
             _deleteBlockBtn.onClick.AddListener(OnDeleteButtonClicked);
 
             _attributeSelectorMenu.SetActive(false);
+            _attributeSelectorMenu2.SetActive(false);
         }
     }
 }

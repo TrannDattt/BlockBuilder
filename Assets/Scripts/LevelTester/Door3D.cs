@@ -1,8 +1,9 @@
 using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using BuilderTool.Interfaces;
 using UnityEngine;
 
-public class Door3D : Wall3D{
+public class Door3D : Wall3D, ICanHaveMechanic{
     public EColor Color {get; private set;}
 
     private MeshRenderer _renderer;
@@ -15,5 +16,10 @@ public class Door3D : Wall3D{
     private void ChangeColor(EColor color){
         Color = color;
         _renderer.material.color = ColorMapper.GetColor(color);
+    }
+
+    public GameObject GetObject()
+    {
+        return gameObject;
     }
 }

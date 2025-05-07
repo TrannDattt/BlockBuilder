@@ -14,13 +14,16 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
         //     var block = hit.collider.gameObject.GetComponentInParent<Block3D>();
         //     return block;
         // }
-
-        var hit = Physics2D.Raycast(selectPos, Vector2.zero, Mathf.Infinity, LayerMask.GetMask("Block"));
+    
+        var ray = _mainCam.ScreenPointToRay(selectPos);
+        var hit = Physics2D.Raycast(ray.origin, ray.direction, Mathf.Infinity, LayerMask.GetMask("Block"));
         if(hit.collider != null){
             var block = hit.collider.gameObject.GetComponentInParent<Block3D>();
+            // Debug.Log(block);
             return block;
         }
 
+        // Debug.Log(1);
         return null;
     }
 
@@ -41,17 +44,26 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
     //      Solution: use 2d block as base for collider => Use composite collider to connect them
     //              => Check collided
     private void MoveBlock(Vector3 mousePos){
-        var targetPos = mousePos + _offset;
+        var ray = _mainCam.ScreenPointToRay(mousePos);
+        var zPos = SelectedBlock.transform.position.z;
+        var targetPos = ray.origin + _offset;
+        // SelectedBlock.Body.
+        SelectedBlock.Body.MovePosition(targetPos);
 
-        if(!SelectedBlock.IsCollide){
-            SelectedBlock.transform.position = targetPos;
-        }
+        Vector3 pos3D = SelectedBlock.transform.position;
+        pos3D.z = zPos;
+        SelectedBlock.transform.position = pos3D;
+
+        // if(!SelectedBlock.IsCollide){
+        //     SelectedBlock.transform.position = targetPos;
+        // }
     }
 
     private void SnapBlockToTile(){
         Vector2 blockPos = SelectedBlock.transform.position;
+        var ray = _mainCam.ScreenPointToRay(blockPos);
         
-        var hit = Physics2D.Raycast(blockPos, Vector2.zero, Mathf.Infinity, LayerMask.GetMask("Map"));
+        var hit = Physics2D.Raycast(ray.origin, ray.direction, Mathf.Infinity, LayerMask.GetMask("Map"));
 
         if(hit.collider != null){
             var tile = hit.collider.gameObject.transform.parent;
@@ -63,19 +75,22 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
 
     private void HandleMouseInput(){
         if(Input.GetKeyDown(KeyCode.Mouse0)){
-            var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
+            var mousePos = Input.mousePosition;
+            // var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
             SelectedBlock = GetSelectedBlock(mousePos);
 
             if(SelectedBlock != null){
-                _clickPos = mousePos;
-                _offset = SelectedBlock.transform.position - mousePos;
+                // _clickPos = mousePos;
+                var ray = _mainCam.ScreenPointToRay(mousePos);
+                _offset = SelectedBlock.transform.position - ray.origin;
             }
         }
 
-        if(Input.GetKey(KeyCode.Mouse0) && SelectedBlock != null){
-            var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-            MoveBlock(mousePos);
-        }
+        // if(Input.GetKey(KeyCode.Mouse0) && SelectedBlock != null){
+        //     var mousePos = Input.mousePosition;
+        //     // var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
+        //     MoveBlock(mousePos);
+        // }
 
         if(Input.GetKeyUp(KeyCode.Mouse0) && SelectedBlock != null){
             SnapBlockToTile();
@@ -91,5 +106,14 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
     void Update()
     {
         HandleMouseInput();
+    }
+
+    void FixedUpdate()
+    {
+        if(Input.GetKey(KeyCode.Mouse0) && SelectedBlock != null){
+            var mousePos = Input.mousePosition;
+            // var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
+            MoveBlock(mousePos);
+        }
     }
 }

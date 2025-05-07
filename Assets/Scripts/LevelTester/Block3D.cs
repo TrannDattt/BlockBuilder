@@ -2,8 +2,11 @@ using UnityEngine;
 using BuilderTool.Enums;
 using BuilderTool.Helpers;
 using UnityEditor;
+using BuilderTool.Interfaces;
 
-public class Block3D : MonoBehaviour{
+public class Block3D : MonoBehaviour, ICanHaveMechanic{
+    public Rigidbody2D Body {get; private set;}
+
     public EColor Color {get; private set;}
     public bool IsCollide {get; private set;}
 
@@ -11,6 +14,7 @@ public class Block3D : MonoBehaviour{
 
     public void InitBlock(EColor color){
         _renderers = GetComponentsInChildren<MeshRenderer>();
+        Body = GetComponent<Rigidbody2D>();
 
         ChangeColor(color);
     }
@@ -21,17 +25,8 @@ public class Block3D : MonoBehaviour{
         }
     }
 
-
-
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // foreach (ContactPoint2D contact in collision.contacts){
-        //     var contactPoint = contact.point;
-        //     if(Block3DSelectHandler.Instance.CheckBlockCollide(contactPoint)){
-        //         IsCollide = true;
-        //         return;
-        //     }
-        // }
         if(collision.collider.gameObject.layer == LayerMask.NameToLayer("Wall")){
             IsCollide = true;
         }
@@ -40,5 +35,10 @@ public class Block3D : MonoBehaviour{
     void OnCollisionExit2D(Collision2D collision)
     {
         IsCollide = false;
+    }
+
+    public GameObject GetObject()
+    {
+        return gameObject;
     }
 }

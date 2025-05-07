@@ -69,7 +69,10 @@ namespace SerializeReferenceEditor.Editor
 			var buttonContent = new GUIContent(options.ButtonTitle ? buttonTitle : string.Empty);
 
 			float buttonWidth = 10f + GUI.skin.button.CalcSize(buttonContent).x;
+			var lastIsExpanded = property.isExpanded;
+			property.isExpanded = false;
 			float buttonHeight = EditorGUI.GetPropertyHeight(property, label, false);
+			property.isExpanded = lastIsExpanded;
 
 			var bgColor = GUI.backgroundColor;
 			GUI.backgroundColor = Color.green;
@@ -88,6 +91,25 @@ namespace SerializeReferenceEditor.Editor
 				EditorGUI.LabelField(propertyRect, label);
 			else
 				EditorGUI.PropertyField(propertyRect, property, label, options.WithChild);
+		}
+		
+		public float GetButtonWidth(SerializedProperty property, SRDrawerOptions options)
+		{
+			int index;
+			if (_array == null)
+			{
+				_array = GetParentArray(property, out index);
+			}
+			else
+			{
+				index = GetArrayIndex(property);
+			}
+
+			string typeName = _nameService.GetTypeName(property.managedReferenceFullTypename);
+			var buttonTitle = typeName + (_array != null ? ("[" + index + "]") : "");
+			var buttonContent = new GUIContent(options.ButtonTitle ? buttonTitle : string.Empty);
+
+			return 10f + GUI.skin.button.CalcSize(buttonContent).x;
 		}
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
