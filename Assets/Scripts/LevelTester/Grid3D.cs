@@ -61,7 +61,7 @@ public class Grid3D : Singleton<Grid3D>
         GenerateFloor(EditorField.Instance.Tiles);
         GenerateWall();
         GenerateBlock();
-        GenerateObstacle();
+        GenerateFloorMechanic();
         await Task.Yield();
     }
 
@@ -210,12 +210,12 @@ public class Grid3D : Singleton<Grid3D>
             Vector3 offset = new(0, 0, -.25f);
             Vector3 pos = _floor3D[tileIndex / FloorMaxHeight, tileIndex % FloorMaxWidth].transform.position + offset;
 
-            BlockSpawner3D.Instance.SpawnBlock(block, pos);
+            BlockSpawner3D.Instance.SpawnBlock(block, pos, block.transform.rotation);
         }
     }
 
     // TODO: Generate mechanic here
-    private void GenerateObstacle(){
+    private void GenerateFloorMechanic(){
         PlacePillar();
     }
 

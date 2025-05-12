@@ -4,15 +4,15 @@ using UnityEngine;
 
 namespace BuilderTool.Mechanic
 {
-    public class Freeze : AMechanic, IImmoblized
+    public class Chain : AMechanic, IImmoblized
     {
         public int TurnCount {get; private set;}
         int IImmoblized.TurnCount { get => TurnCount; set => TurnCount = value; }
 
         private RigidbodyConstraints2D _preConstraint;
         public RigidbodyConstraints2D PreConstraint { get => _preConstraint; set => _preConstraint = value; }
-        
-        public Freeze(EMechanic type, EDirection dir, int turnCount) : base(type, dir)
+
+        public Chain(EMechanic type, EDirection dir, int turnCount) : base(type, dir)
         {
             TurnCount = turnCount;
         }

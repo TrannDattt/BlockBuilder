@@ -16,19 +16,11 @@ namespace BuilderTool.FileConvert
         {
             public EShape Shape;
             public EColor PrimaryColor;
-            public EColor SecondaryColor;
-            public bool ContainKey;
-            public bool ContainStar;
             public int PosIndex;
+            public Vector3 Rotation;
 
             public BlockData(EditorBlock block)
             {
-                Shape = block.Shape;
-                PrimaryColor = block.PrimaryColor;
-                SecondaryColor = block.SecondaryColor;
-                ContainKey = block.ContainKey;
-                ContainStar = block.ContainStar;
-
                 var field = EditorField.Instance;
                 if (field.BlockDict.ContainsKey(block))
                 {
@@ -38,14 +30,19 @@ namespace BuilderTool.FileConvert
                 {
                     PosIndex = -1;
                     Debug.LogError($"Field does not contain {block}.");
+                    return;
                 }
+
+                Shape = block.Shape;
+                PrimaryColor = block.PrimaryColor;
+                Rotation = block.transform.rotation.eulerAngles;
             }
         }
 
         public static string ConvertBlockToJson()
         {
             string json = "";
-            var blocks = EditorField.Instance.BlockDict.Keys.ToList<EditorBlock>() ;
+            var blocks = EditorField.Instance.BlockDict.Keys.ToList() ;
 
             foreach (var block in blocks)
             {

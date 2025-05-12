@@ -1,4 +1,5 @@
 ﻿using BuilderTool.Enums;
+using BuilderTool.Interfaces;
 using UnityEngine;
 
 namespace BuilderTool.LevelEditor

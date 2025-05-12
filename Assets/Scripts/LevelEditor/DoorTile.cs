@@ -1,5 +1,6 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using BuilderTool.Interfaces;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ using static BuilderTool.FileConvert.FieldInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
-    public class DoorTile : ATileAttribute
+    public class DoorTile : ATileAttribute, ICanHaveMechanic
     {
         //public EColor ColorUp { get; private set; } = EColor.Black;
         //public EColor ColorDown { get; private set; } = EColor.Black;
@@ -52,7 +53,7 @@ namespace BuilderTool.LevelEditor
             GetDoor(dir).color = ColorMapper.GetColor(color);
         }
 
-        private SpriteRenderer GetDoor(EDirection dir) => dir switch
+        public SpriteRenderer GetDoor(EDirection dir) => dir switch
         {
             EDirection.Up => _upDoor,
             EDirection.Down => _downDoor,
@@ -60,5 +61,10 @@ namespace BuilderTool.LevelEditor
             EDirection.Right => _rightDoor,
             _ => null,
         };
+
+        public GameObject GetObject()
+        {
+            return gameObject;
+        }
     }
 }

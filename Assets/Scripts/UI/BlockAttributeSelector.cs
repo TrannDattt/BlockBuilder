@@ -1,5 +1,7 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using BuilderTool.Interfaces;
+using BuilderTool.Mechanic;
 using BuilderTool.UIElement;
 using TMPro;
 using UnityEngine;
@@ -15,18 +17,9 @@ namespace BuilderTool.LevelEditor
 
         [Header("Color")]
         [SerializeField] private ColorDropdown _primaryColorSelectorDropdown;
-        [SerializeField] private ColorDropdown _secondaryColorSelectorDropdown;
 
-        [Header("Attribute Toggle")]
-        [SerializeField] private ToolRadioButton _containStarToggle;
-        [SerializeField] private ToolRadioButton _containKeyToggle;
-
-        [Header("Contraint")]
-        [SerializeField] private TMP_InputField _freezeCount;
-        [SerializeField] private TMP_InputField _boomCount;
-        [SerializeField] private TMP_InputField _chainCount;
-
-        [SerializeField] private DirectionContrainedDropdown _directionContrainedDropdown;
+        [Header("Mechanic Selector")]
+        [SerializeField] private MechanicRadioButtonGroup _mechanicButtonGroup;
 
         public void OpenSelectAttributeMenu(EditorBlock block)
         {
@@ -34,73 +27,55 @@ namespace BuilderTool.LevelEditor
             _attributeSelectorMenu2.SetActive(true);
 
             OpenColorSelector(block);
-            OpenToggle(block);
-            OpenContraintSelector(block);
+            GetBlockMechanic(block);
         }
 
         public void OpenColorSelector(EditorBlock block)
         {
             var priColor = block.PrimaryColor;
-            var secColor = block.SecondaryColor;
 
             _primaryColorSelectorDropdown.value = (int)priColor;
-            _secondaryColorSelectorDropdown.value = (int)secColor;
         }
 
-        public void OpenToggle(EditorBlock block)
-        {
-            _containStarToggle.ChangeState(block.ContainStar);
-            _containKeyToggle.ChangeState(block.ContainKey);
-        }
-
-        public void OpenContraintSelector(EditorBlock block){
-            // TODO: Get block attribute
+        public void GetBlockMechanic(EditorBlock block){
+            var mechanic = EditorField.Instance.GetMechanicFromDict(block);
+            _mechanicButtonGroup.UpdateMechanicButtonDisplay(mechanic);
         }
 
         public void CloseMenu()
         {
             _attributeSelectorMenu.SetActive(false);
+            _mechanicButtonGroup.ResetButtonGroupDisplay();
             _attributeSelectorMenu2.SetActive(false);
         }
 
         private void OnPrimaryColorSelected(int index)
         {
             var color = (EColor)index;
-            Debug.Log(index);
 
-            foreach(var block in BlockSelectHandler.Instance.SelectedBlocks)
-            {
-                block.ChangeBlockPrimaryColor(color);
-            }
-        }
-
-        private void OnSecondaryColorSelected(int index)
-        {
-
-        }
-
-        private void OnContainStarToggled(bool isOn)
-        {
-            
-        }
-
-        private void OnContainKeyToggled(bool isOn)
-        {
-
+            var block = BlockSelectHandler.Instance.SelectedBlock;
+            block.ChangeBlockPrimaryColor(color);
         }
 
         private void OnDeleteButtonClicked()
         {
-            BlockPlacement.Instance.RemoveBlock(BlockSelectHandler.Instance.SelectedBlocks.ToArray());
+            var selectedBlock = BlockSelectHandler.Instance.SelectedBlock;
+            BlockPlacement.Instance.RemoveBlock(selectedBlock);
+        }
+
+        public void LoadBlockMechanic(AMechanic mechanic, ICanHaveMechanic obj){
+            _mechanicButtonGroup.LoadMechanicData(mechanic, obj);
+        }
+
+        public void RemoveBlockMechanic(EditorBlock block){
+            // Debug.Log(block);
+            var mechanic = EditorField.Instance.GetMechanicFromDict(block);
+            _mechanicButtonGroup.RemoveMechanic(mechanic, block);
         }
 
         private void Start()
         {
             _primaryColorSelectorDropdown.onValueChanged.AddListener(OnPrimaryColorSelected);
-            _secondaryColorSelectorDropdown.onValueChanged.AddListener(OnSecondaryColorSelected);
-
-            // _containStarToggle.OnButtonClicked += OnContainStarToggled;
-            // _containKeyToggle.onValueChanged.AddListener(OnContainKeyToggled);
 
             _deleteBlockBtn.onClick.AddListener(OnDeleteButtonClicked);
 

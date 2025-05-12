@@ -5,7 +5,10 @@ namespace BuilderTool.Enums
         Freeze,
         Chained,
         Key,
-        DirectionnContraint,
+        Bomb,
+        DirectionContraint,
         Star,
+        Gated,
+        SecondColor
     }
 }

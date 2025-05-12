@@ -31,7 +31,8 @@ namespace BuilderTool.FileConvert
             var json = $"{{"
                        + $"\"LevelInfo\":{JsonUtility.ToJson(new LevelInfoData())},"
                        + $"\"Tiles\":[{FieldInfoConverter.ConvertTileToJson()}],"
-                       + $"\"Blocks\":[{BlockInfoConverter.ConvertBlockToJson()}]"
+                       + $"\"Blocks\":[{BlockInfoConverter.ConvertBlockToJson()}],"
+                       + $"\"Mechanics\":[{MechanicInfoConverter.ConvertMechanicToJson()}]"
                        + $"}}";
 
             return json;
@@ -39,26 +40,29 @@ namespace BuilderTool.FileConvert
 
         public static void ConvertJsonToLevel(string json)
         {
-            SplitJson(json, out string levelJson, out string tilesJson, out string blocksJson);
+            SplitJson(json, out string levelJson, out string tilesJson, out string blocksJson, out string mechanicJson);
 
             var levelInfoData = JsonUtility.FromJson<LevelInfoData>(levelJson);
             LevelManagerMenu.Instance.UpdateLevelInfo(levelInfoData);
 
             FieldInfoConverter.ConvertJsonToTile(tilesJson);
             BlockInfoConverter.ConvertJsonToBlock(blocksJson);
+            MechanicInfoConverter.ConvertJsonToMechanic(mechanicJson);
         }
 
-        private static void SplitJson(string json, out string levelJson, out string tilesJson, out string blocksJson)
+        private static void SplitJson(string json, out string levelJson, out string tilesJson, out string blocksJson, out string mechanicJson)
         {
             levelJson = "";
             tilesJson = "";
             blocksJson = "";
+            mechanicJson = "";
 
             int levelInfoStartIndex = json.IndexOf("\"LevelInfo\":") + 12;
             int tilesStartIndex = json.IndexOf("\"Tiles\":") + 8;
-            int blocksStartIndex = json.IndexOf("\"Blocks\":") + 10;
+            int blocksStartIndex = json.IndexOf("\"Blocks\":") + 9;
+            int mechanicsStartIndex = json.IndexOf("\"Mechanics\":") + 12;
 
-            if(levelInfoStartIndex == -1 || tilesStartIndex == -1 || blocksStartIndex == -1)
+            if(levelInfoStartIndex == -1 || tilesStartIndex == -1 || blocksStartIndex == -1 || mechanicsStartIndex == -1)
             {
                 Debug.Log("Invalided JSON.");
                 return;
@@ -66,11 +70,13 @@ namespace BuilderTool.FileConvert
 
             levelJson = ExtractJsonSession(json, levelInfoStartIndex, json.IndexOf("\"Tiles\":") + 1);
             tilesJson = ExtractJsonSession(json, tilesStartIndex, json.IndexOf("\"Blocks\":") + 1);
-            blocksJson = json[(blocksStartIndex - 1)..].TrimEnd('}');
+            blocksJson = ExtractJsonSession(json, blocksStartIndex, json.IndexOf("\"Mechanics\":") + 1);
+            mechanicJson = json[mechanicsStartIndex..].TrimEnd('}');
 
-            //Debug.Log(levelJson);
-            //Debug.Log(tilesJson);
-            //Debug.Log(blocksJson);
+            // Debug.Log(levelJson);
+            // Debug.Log(tilesJson);
+            // Debug.Log(blocksJson);
+            // Debug.Log(mechanicJson);
         }
 
         private static string ExtractJsonSession(string json, int startIndex, int endIndex)

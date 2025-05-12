@@ -5,7 +5,7 @@
         protected override void Awake()
         {
             DontDestroyOnLoad(this);
-            base.Awake();
+            // base.Awake();
         }
     }
 }

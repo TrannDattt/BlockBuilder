@@ -8,10 +8,11 @@ namespace BuilderTool.LevelEditor
 {
     public class BlockSelectHandler : Singleton<BlockSelectHandler>
     {
-        public List<EditorBlock> SelectedBlocks { get; private set; } = new();
+        public EditorBlock SelectedBlock { get; private set; }
 
         private Camera _mainCam;
         private bool _isPickingUpBlock;
+        private Vector3 _rotateAngle = new(0, 0, 90);
 
         public event Action<EditorBlock> OnBlockSelected;
         public event Action OnNoBlockSelected;
@@ -28,28 +29,16 @@ namespace BuilderTool.LevelEditor
             {
                 if (CheckIfClickedOnBlock(out EditorBlock block))
                 {
-                    //    if (!Input.GetKey(KeyCode.LeftControl))
-                    //    {
-                    RemoveAllSelectedBlocks();
-                    //}
-
-                    //AddSelectedBlock(block);
                     PickUpBlock(block);
                 }
                 else if (!CheckIfClickedOnUI())
                 {
-                    RemoveAllSelectedBlocks();
+                    RemoveSelectedBlock();
                 }
+            }
 
-                //if (Input.GetKey(KeyCode.LeftShift))
-                //{
-                //    _ROIEndPos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-                //    SelectTileInROI(_ROIStartPos, _ROIEndPos);
-                //}
-                //else
-                //{
-                //    _ROIStartPos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-                //}
+            if(_isPickingUpBlock && Input.GetKeyDown(KeyCode.R)){
+                RotateBlock();
             }
         }
 
@@ -57,10 +46,6 @@ namespace BuilderTool.LevelEditor
         {
             block = null;
             var mousePos = _mainCam.ScreenToWorldPoint(Input.mousePosition);
-
-            if(TileSelectHandler.Instance.SelectedTiles.Count > 0){
-                RemoveAllSelectedBlocks();
-            }
 
             var hit = Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity, LayerMask.GetMask("Block"));
 
@@ -70,64 +55,61 @@ namespace BuilderTool.LevelEditor
                 return true;
             }
 
+            if(Physics2D.Raycast(mousePos, Vector2.zero, Mathf.Infinity, LayerMask.GetMask("Map")))
+            {
+                RemoveSelectedBlock();
+            }
+
             return false;
         }
 
         private bool CheckIfClickedOnUI()
         {
-            //if(EventSystem.current.IsPointerOverGameObject())
-            //{
-            //    return EventSystem.current.CompareTag("Block");
-            //}
-
-            //return false;
             return EventSystem.current.IsPointerOverGameObject();
         }
 
-        public void AddSelectedBlock(EditorBlock block)
+        public void ChangeSelectedBlock(EditorBlock block)
         {
-            if(!SelectedBlocks.Contains(block))
+            if(SelectedBlock != block)
             {
-                SelectedBlocks.Add(block);
+                SelectedBlock = block;
                 block.SelectBlock();
                 OnBlockSelected?.Invoke(block);
             }
         }
 
-        public void RemoveSelectedBlock(EditorBlock block)
+        public void RemoveSelectedBlock()
         {
             //OnBlockDrop?.Invoke(block);
-            SelectedBlocks.Remove(block);
-            block.UnselectedBlock();
-        }
-
-        public void RemoveAllSelectedBlocks()
-        {
-            while(SelectedBlocks.Count > 0)
-            {
-                RemoveSelectedBlock(SelectedBlocks[0]);
-            }
-
+            SelectedBlock?.UnselectedBlock();
+            SelectedBlock = null;
             OnNoBlockSelected?.Invoke();
         }
 
         public void PickUpBlock(EditorBlock block)
         {
+            ChangeSelectedBlock(block);
             block.PickUpBlock();
             _isPickingUpBlock = true;
-            AddSelectedBlock(block);
         }
 
         private void DropBlock()
         {
-            var selectedBlocks = new List<EditorBlock>(SelectedBlocks);
-            foreach (var block in selectedBlocks)
-            {
-                block.DropBlock();
-                OnBlockDrop?.Invoke(block);
-            }
-
+            SelectedBlock.DropBlock();
+            OnBlockDrop?.Invoke(SelectedBlock);
             _isPickingUpBlock = false;
+        }
+
+        private void RotateBlock(){
+            var curRotation = SelectedBlock.transform.rotation.eulerAngles;
+            var newRotation = curRotation + _rotateAngle;
+            newRotation.Set(newRotation.x, newRotation.y, newRotation.z % 360);
+            SelectedBlock.transform.rotation = Quaternion.Euler(newRotation);
+        }
+
+        void OnEnable()
+        {
+            _mainCam = Camera.main;
         }
 
         private void Start()
@@ -149,11 +131,6 @@ namespace BuilderTool.LevelEditor
         private void Update()
         {
             GetUserInput();
-
-            if (!_mainCam)
-            {
-                _mainCam = Camera.main;
-            }
         }
     }
 }

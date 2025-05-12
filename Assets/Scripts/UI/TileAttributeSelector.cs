@@ -1,5 +1,7 @@
 ﻿using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using BuilderTool.Interfaces;
+using BuilderTool.Mechanic;
 using BuilderTool.UIElement;
 using UnityEngine;
 
@@ -8,39 +10,42 @@ namespace BuilderTool.LevelEditor
     public class TileAttributeSelector : Singleton<TileAttributeSelector>
     {
         [SerializeField] private GameObject _attributeSelectorMenu;
-        [SerializeField] private GameObject _attributeSelectorMenu2;
+        [SerializeField] private GameObject _doorMechanicSelectorMenu;
+
+        [Header("Tile Type")]
         [SerializeField] private TileTypeDropdown _tileTypeSelectorDropdown;
 
+        [Header("Door Attribute")]
         [SerializeField] private ColorDropdown _colorUpSelectorDropdown;
         [SerializeField] private ColorDropdown _colorDownSelectorDropdown;
         [SerializeField] private ColorDropdown _colorLeftSelectorDropdown;
         [SerializeField] private ColorDropdown _colorRightSelectorDropdown;
 
+        [Header("Pillar Attribute")]
         [SerializeField] private ColorDropdown _blockColorSelectorDropdown;
+
+        [Header("Mechanic Selector")]
+        [SerializeField] private MechanicRadioButtonGroup _doorMechanicButtonGroup;
 
         public void OpenSelectAttributeMenu(EditorTile tile)
         {
             _attributeSelectorMenu.SetActive(true);
-            _attributeSelectorMenu2.SetActive(true);
 
             _tileTypeSelectorDropdown.SetValueWithoutNotify((int)tile.TileType);
 
-            HideAllSelector();
+            HideAttributeSelector();
+            HideDoorMechanicSeletor();
 
             switch(tile.TileType)
             {
-                //case ETileType.Empty:
-                //    break;
-
-                //case ETileType.Ground:
-                //    break;
-
                 case ETileType.BlockNode:
                     OpenBlockAttributeSelector(tile);
                     break;
 
                 case ETileType.Door:
                     OpenDoorAttributeSelector(tile);
+                    _doorMechanicSelectorMenu.SetActive(true);
+                    GetDoorMechanic(tile.CurTileAttribute as DoorTile);
                     break;
 
                 default:
@@ -48,7 +53,24 @@ namespace BuilderTool.LevelEditor
             }
         }
 
-        private void HideAllSelector()
+        public void GetDoorMechanic(DoorTile door){
+            var upMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Up);
+            var downMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Down);
+            var leftMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Left);
+            var rightMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Right);
+
+            Debug.Log((upMechanic as IImmoblized)?.TurnCount);
+            Debug.Log((downMechanic as IImmoblized)?.TurnCount);
+            Debug.Log((leftMechanic as IImmoblized)?.TurnCount);
+            Debug.Log((rightMechanic as IImmoblized)?.TurnCount);
+
+            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(upMechanic);
+            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(downMechanic);
+            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(leftMechanic);
+            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(rightMechanic);
+        }
+
+        private void HideAttributeSelector()
         {
             _blockColorSelectorDropdown.gameObject.SetActive(false);
             _colorUpSelectorDropdown.gameObject.SetActive(false);
@@ -57,11 +79,16 @@ namespace BuilderTool.LevelEditor
             _colorRightSelectorDropdown.gameObject.SetActive(false);
         }
 
+        private void HideDoorMechanicSeletor(){
+            _doorMechanicButtonGroup.ResetButtonGroupDisplay();
+            _doorMechanicSelectorMenu.SetActive(false);
+        }
+
         public void CloseMenu()
         {
-            HideAllSelector();
+            HideAttributeSelector();
+            HideDoorMechanicSeletor();
             _attributeSelectorMenu.SetActive(false);
-            _attributeSelectorMenu2.SetActive(false);
         }
 
         private void OpenDoorAttributeSelector(EditorTile tile)
@@ -114,6 +141,10 @@ namespace BuilderTool.LevelEditor
             {
                 (tile.CurTileAttribute as BlockTile).ChangeBlockColor(color);
             }
+        }
+
+        public void LoadBlockMechanic(AMechanic mechanic, ICanHaveMechanic obj){
+            _doorMechanicButtonGroup.LoadMechanicData(mechanic, obj);
         }
 
         private void Start()

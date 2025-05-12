@@ -43,10 +43,11 @@ namespace BuilderTool.LevelEditor
         {
             foreach(var block in blocks)
             {
+                BlockAttributeSelector.Instance.RemoveBlockMechanic(block);
                 BlockPooling.Instance.ReturnBlock(block);
                 EditorField.Instance.RemoveBlock(block);
             }
-            BlockSelectHandler.Instance.RemoveAllSelectedBlocks();
+            BlockSelectHandler.Instance.RemoveSelectedBlock();
         }
 
         private bool CheckCanPlaceBlockOnGrid(EditorBlock block, out EditorTile mainTile)

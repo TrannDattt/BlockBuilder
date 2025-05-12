@@ -1,6 +1,7 @@
 using BuilderTool.Editor;
 using BuilderTool.Enums;
 using BuilderTool.Helpers;
+using BuilderTool.Interfaces;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,7 +10,7 @@ using static BuilderTool.FileConvert.BlockInfoConverter;
 
 namespace BuilderTool.LevelEditor
 {
-    public class EditorBlock : MonoBehaviour
+    public class EditorBlock : MonoBehaviour, ICanHaveMechanic
     {
         [SerializeField] private List<SpriteRenderer> _priRenderers;
         //[SerializeField] private List<SpriteRenderer> _secRenderers;
@@ -41,6 +42,7 @@ namespace BuilderTool.LevelEditor
         public void UpdateBlockData(BlockData data)
         {
             ChangeBlockPrimaryColor(data.PrimaryColor);
+            transform.rotation = Quaternion.Euler(data.Rotation);
             //Change
         }
 
@@ -90,6 +92,11 @@ namespace BuilderTool.LevelEditor
             {
                 MoveBlockAfterPointer();
             }
+        }
+
+        public GameObject GetObject()
+        {
+            return gameObject;
         }
     }
 }
