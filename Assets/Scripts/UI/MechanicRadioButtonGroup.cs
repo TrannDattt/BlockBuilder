@@ -11,8 +11,9 @@ namespace BuilderTool.LevelEditor
     public class MechanicRadioButtonGroup : MonoBehaviour{
         [SerializeField] private List<MechanicRadioButton> _buttonList;
 
-        public MechanicRadioButton ActiveButton {get; private set;}
-        // public event Action<AMechanic, ICanHaveMechanic> OnMechanicUpdated;
+        private MechanicRadioButton GetButtonByKey(EMechanic key){
+            return _buttonList.FirstOrDefault(btn => btn.Key == key);
+        }
 
         /// <summary>
         /// Update activated button and deactivate all other button
@@ -21,70 +22,58 @@ namespace BuilderTool.LevelEditor
         /// <param name="state">Toggle state of the button</param>
         public void ChangeActivatedButton(EMechanic buttonKey, bool state){
             foreach (var btn in _buttonList){
-                if(btn.Key == buttonKey){
-                    ActiveButton = state ? btn : null;
-                    // btn.ActivateContent();
-                }
-                else{
+                if(btn.Key != buttonKey){
                     btn.DeactivateContent();
                 }
             }
         }
 
-        public void LoadMechanicData(AMechanic mechanic, ICanHaveMechanic obj){
-            var button = _buttonList.FirstOrDefault(btn => btn.Key == mechanic.Type);
-            button.LoadMechanicData(mechanic, obj);
-        }
+        // TODO: When set more then one mechanic to tile, then click to an empty tile and click back, it lost the mechanic
+        public void UpdateMechanicDisplay(AMechanic mechanic, ICanHaveMechanic obj){
+            Debug.Log(mechanic);
 
-        /// <summary>
-        /// Update the displaying of group buttons whenever a block/tile is selected
-        /// </summary>
-        /// <param name="mechanic">Mechanic that the object is holding</param>
-        public void UpdateMechanicButtonDisplay(AMechanic mechanic){
+            _buttonList.ForEach(btn => {
+                btn.SetSelectedObject(obj, false);
+                btn.DeactivateContent();
+            });
+
             if(mechanic == null){
-                ResetButtonGroupDisplay();
+                _buttonList.ForEach(btn => btn.ResetSavedMechanic());
                 return;
             }
 
-            ChangeActivatedButton(mechanic.Type, true);
-            if(ActiveButton != null && ActiveButton.SavedMechanic[mechanic.Dir] != mechanic){
-                // Debug.Log(2);
-                ResetButtonGroupDisplay(false);
-            }
-
-            ActiveButton.ActivateContent();
-            ActiveButton.UpdateContentDisplay(mechanic);
-        }
-
-        /// <summary>
-        /// Return the displaying of group button to default 
-        /// if the selected tile/block has no mechanic or no longer available
-        /// </summary>
-        /// <param name="resetAll">If the buttons to reset include the active button</param>
-        public void ResetButtonGroupDisplay(bool resetAll = true) 
-        {
-            foreach(var button in _buttonList){
-                if(ActiveButton != null && button == ActiveButton && !resetAll){
-                    continue;
+            _buttonList.ForEach(btn => {
+                if(btn.Key != mechanic.Type){
+                    btn.ResetSavedMechanic();
+                    Debug.Log(2);
                 }
+            });
 
-                button.ResetContentDisplay();
-                button.DeactivateContent();
-            }
+            var button = GetButtonByKey(mechanic.Type);
+            ChangeActivatedButton(mechanic.Type, true);
+            button.ActivateContent();
+            button.UpdateMechanicDisplay(mechanic);
         }
 
-        public void RemoveMechanic(AMechanic mechanic, ICanHaveMechanic obj){
-            if(mechanic != null){
-                var button = _buttonList.FirstOrDefault(btn => btn.Key == mechanic.Type);
-                button.ResetMechanicData(obj);
-                button.DeactivateContent();
+        public void AssignMechanicToObject(AMechanic mechanic, ICanHaveMechanic obj){
+            if(mechanic != null)
+            {
+                var button = GetButtonByKey(mechanic.Type);
+                button.SetSelectedObject(obj, false);
+                button.AssignMechanicToObject(mechanic, mechanic.Dir);
+            }
+            else{
+                _buttonList.ForEach(btn => {
+                    btn.SetSelectedObject(obj, true);
+                    btn.AssignSavedMechanicToObject();
+                    // btn.ResetSavedMechanic();
+                });
             }
         }
 
         private void InitAllButtons(){
             foreach(var button in _buttonList){
                 button.DeactivateContent();
-                ActiveButton = null;
                 button.OnButtonClicked += ChangeActivatedButton;
             }
         }
@@ -92,20 +81,14 @@ namespace BuilderTool.LevelEditor
         void OnEnable()
         {
             InitAllButtons();
-            // OnMechanicUpdated += 
-        }
-
-        void OnDisable()
-        {
-            if(ActiveButton != null){
-                ActiveButton = null;
-            }
-
         }
 
         void OnDestroy()
         {
-            
+            foreach(var button in _buttonList){
+                // button.DeactivateContent();
+                button.OnButtonClicked -= ChangeActivatedButton;
+            }
         }
     }
 }

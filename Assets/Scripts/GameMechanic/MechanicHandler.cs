@@ -9,11 +9,17 @@ namespace BuilderTool.Mechanic
         private ICanHaveMechanic _baseObject;
 
         public void SetMechanic(AMechanic mechanic){
+            if(mechanic == null){
+                return;
+            }
+
             CurMechanic = mechanic;
             CurMechanic?.OnApplying(_baseObject);
+
+            Debug.Log(gameObject + " " + mechanic.Type);
         }
 
-        void Start()
+        void Awake()
         {
             _baseObject = gameObject.GetComponent<ICanHaveMechanic>();
         }

@@ -142,12 +142,10 @@ namespace BuilderTool.LevelEditor
                     switch(mechanicData.MechanicType){
                         case EMechanic.Freeze:
                             mechanic = new Freeze(EMechanic.Freeze, dir, (mechanicData as FreezeMechanicData).TurnCount);
-                            UpdateMechanic(mechanic, obj, dir);
                             break;
 
                         case EMechanic.Chained:
                             mechanic = new Chain(EMechanic.Chained, dir, (mechanicData as ChainMechanicData).TurnCount);
-                            UpdateMechanic(mechanic, obj, dir);
                             break;
                     }
 
@@ -157,10 +155,10 @@ namespace BuilderTool.LevelEditor
 
                     if(dir == EDirection.None)
                     {
-                        BlockAttributeSelector.Instance.LoadBlockMechanic(mechanic, obj);
+                        BlockAttributeSelector.Instance.AssignMechanicToBlock(mechanic, obj);
                     }
                     else{
-                        TileAttributeSelector.Instance.LoadBlockMechanic(mechanic, obj);
+                        TileAttributeSelector.Instance.LoadDoorMechanic(mechanic, obj);
                     }
                 }
             }
@@ -175,6 +173,13 @@ namespace BuilderTool.LevelEditor
         private void Start()
         {
             CreateNewField();
+        }
+
+        void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.E)){
+                LogDict();
+            }
         }
     }
 }

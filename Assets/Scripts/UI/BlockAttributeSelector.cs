@@ -39,13 +39,13 @@ namespace BuilderTool.LevelEditor
 
         public void GetBlockMechanic(EditorBlock block){
             var mechanic = EditorField.Instance.GetMechanicFromDict(block);
-            _mechanicButtonGroup.UpdateMechanicButtonDisplay(mechanic);
+            _mechanicButtonGroup.UpdateMechanicDisplay(mechanic, block);
         }
 
         public void CloseMenu()
         {
             _attributeSelectorMenu.SetActive(false);
-            _mechanicButtonGroup.ResetButtonGroupDisplay();
+            // _mechanicButtonGroup.ResetButtonGroupDisplay();
             _attributeSelectorMenu2.SetActive(false);
         }
 
@@ -63,14 +63,14 @@ namespace BuilderTool.LevelEditor
             BlockPlacement.Instance.RemoveBlock(selectedBlock);
         }
 
-        public void LoadBlockMechanic(AMechanic mechanic, ICanHaveMechanic obj){
-            _mechanicButtonGroup.LoadMechanicData(mechanic, obj);
+        public void AssignMechanicToBlock(AMechanic mechanic, ICanHaveMechanic obj){
+            _mechanicButtonGroup.AssignMechanicToObject(mechanic, obj);
         }
 
         public void RemoveBlockMechanic(EditorBlock block){
             // Debug.Log(block);
             var mechanic = EditorField.Instance.GetMechanicFromDict(block);
-            _mechanicButtonGroup.RemoveMechanic(mechanic, block);
+            _mechanicButtonGroup.AssignMechanicToObject(null, block);
         }
 
         private void Start()

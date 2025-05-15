@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using BuilderTool.Enums;
 using BuilderTool.Interfaces;
 using BuilderTool.LevelEditor;
@@ -16,6 +18,40 @@ namespace BuilderTool.Mechanic
         [SerializeField] private TMP_InputField _downDoorFreezeTurn;
         [SerializeField] private TMP_InputField _leftDoorFreezeTurn;
         [SerializeField] private TMP_InputField _rightDoorFreezeTurn;
+        
+        public override void UpdateMechanicDisplay(AMechanic mechanic, EDirection dir)
+        {
+            switch(dir){
+                case EDirection.None:
+                    UpdateTextFieldDisplay(_blockFreezeTurn, mechanic as Freeze);
+                    break;
+
+                case EDirection.Up:
+                    UpdateTextFieldDisplay(_upDoorFreezeTurn, mechanic as Freeze);
+                    break;
+
+                case EDirection.Down:
+                    UpdateTextFieldDisplay(_downDoorFreezeTurn, mechanic as Freeze);
+                    break;
+
+                case EDirection.Left:
+                    UpdateTextFieldDisplay(_leftDoorFreezeTurn, mechanic as Freeze);
+                    break;
+
+                case EDirection.Right:
+                    UpdateTextFieldDisplay(_rightDoorFreezeTurn, mechanic as Freeze);
+                    break;
+            }
+        }
+
+        private void UpdateTextFieldDisplay(TMP_InputField inputField, Freeze mechanic){
+            if(mechanic == null){
+                inputField.text = "0";
+                return;
+            }
+
+            inputField.text = mechanic.TurnCount.ToString();
+        }
 
         public override void ResetMechanicDisplay()
         {
@@ -31,103 +67,13 @@ namespace BuilderTool.Mechanic
             }
         }
 
-        public override void UpdateMechanicDisplay(AMechanic mechanic)
-        {
-            var freezeMechanic = mechanic as Freeze;
-            switch(freezeMechanic.Dir){
-                case Enums.EDirection.None:
-                    _blockFreezeTurn.text = freezeMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Up:
-                    _upDoorFreezeTurn.text = freezeMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Down:
-                    _downDoorFreezeTurn.text = freezeMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Left:
-                    _leftDoorFreezeTurn.text = freezeMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Right:
-                    _rightDoorFreezeTurn.text = freezeMechanic.TurnCount.ToString();
-                    break;
-            }
-        }
-
-        public override void LoadMechanicData(AMechanic mechanic, ICanHaveMechanic obj)
-        {
-            var freeze = mechanic as Freeze;
-
-            // if(freeze == null){
-            //     ResetMechanicData();
-            // }
-
-            if(_blockFreezeTurn != null)
+        private Tuple<EDirection, Freeze> GetMechanicFromUI(TMP_InputField inputField, EDirection dir){
+            if (int.TryParse(inputField.text, out int turnCount) && turnCount > 0)
             {
-                _button.UpdateMechanicData(new Freeze(EMechanic.Freeze, freeze.Dir, freeze.TurnCount), obj, EDirection.None);
+                return new(dir, new Freeze(EMechanic.Freeze, dir, turnCount));
             }
-            else{
-                _button.UpdateMechanicData(new Freeze(EMechanic.Freeze, freeze.Dir, freeze.TurnCount), obj, freeze.Dir);
-            }
-        }
 
-        public override void ResetMechanicData(ICanHaveMechanic obj)
-        {
-            var holder = obj.GetObject();
-
-            if(holder.TryGetComponent(out EditorBlock block))
-            {
-                // Debug.Log(block);
-                _button.UpdateMechanicData(null, block, EDirection.None);
-            }
-            else{
-                // var tiles = TileSelectHandler.Instance.SelectedTiles;
-                // tiles.ForEach(
-                //     tile => {
-                //         var door = tile.CurTileAttribute as DoorTile;
-                //         button.UpdateMechanicData(null, door, dir);
-                //     }
-                // );
-            }
-        }
-
-        private void UpdateMechanicData(int freezeTurn, EDirection dir){
-            if(freezeTurn > 0)
-            {
-                if(_blockFreezeTurn != null)
-                {
-                    var block = BlockSelectHandler.Instance.SelectedBlock;
-                    _button.UpdateMechanicData(new Freeze(EMechanic.Freeze, dir, freezeTurn), block, dir);
-                }
-                else{
-                    var tiles = TileSelectHandler.Instance.SelectedTiles;
-                    tiles.ForEach(
-                        tile => {
-                            var door = tile.CurTileAttribute as DoorTile;
-                            _button.UpdateMechanicData(new Freeze(EMechanic.Freeze, dir, freezeTurn), door, dir);
-                        }
-                    );
-                }
-            }
-            else{
-                if(_blockFreezeTurn != null)
-                {
-                    var block = BlockSelectHandler.Instance.SelectedBlock;
-                    _button.UpdateMechanicData(null, block, dir);
-                }
-                else{
-                    var tiles = TileSelectHandler.Instance.SelectedTiles;
-                    tiles.ForEach(
-                        tile => {
-                            var door = tile.CurTileAttribute as DoorTile;
-                            _button.UpdateMechanicData(null, door, dir);
-                        }
-                    );
-                }
-            }
+            return new(dir, null);
         }
 
         private void AssignListener(TMP_InputField inputField, EDirection dir){
@@ -135,16 +81,10 @@ namespace BuilderTool.Mechanic
                 return;
             }
             
-            inputField.onValueChanged.AddListener(value =>
+            inputField.onValueChanged.AddListener(_ =>
             {
-                if (int.TryParse(value, out int freezeTurn))
-                {
-                    UpdateMechanicData(freezeTurn, dir);
-                }
-                else
-                {
-                    UpdateMechanicData(0, dir);
-                }
+                var mechanic = GetMechanicFromUI(inputField, dir);
+                _button.AssignMechanicToObject(mechanic.Item2, mechanic.Item1);
             });
         }
 

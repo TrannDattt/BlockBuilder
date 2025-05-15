@@ -1,40 +1,57 @@
 using UnityEngine;
 using BuilderTool.Enums;
-using BuilderTool.Helpers;
 using UnityEditor;
 using BuilderTool.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
 
 public class Block3D : MonoBehaviour, ICanHaveMechanic{
-    public Rigidbody2D Body {get; private set;}
+    public Rigidbody Body {get; private set;}
 
     public EColor Color {get; private set;}
     public bool IsCollide {get; private set;}
 
-    private MeshRenderer[] _renderers;
+    private List<BlockPart3D> _blockParts;
 
-    public void InitBlock(EColor color){
-        _renderers = GetComponentsInChildren<MeshRenderer>();
-        Body = GetComponent<Rigidbody2D>();
+    public void InitBlock(EColor color)
+    {
+        _blockParts = GetComponentsInChildren<BlockPart3D>().ToList();
+        _blockParts.ForEach(part => part.SetBaseObject(gameObject));
+        Body = GetComponent<Rigidbody>();
 
         ChangeColor(color);
     }
 
     public void ChangeColor(EColor color){
-        foreach(var renderer in _renderers){
-            renderer.material.color = ColorMapper.GetColor(color);
-        }
+        _blockParts.ForEach(part => part.ChangeColor(color));
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    public bool CheckCollidedWhenMove(Vector3 targetPos)
     {
-        if(collision.collider.gameObject.layer == LayerMask.NameToLayer("Wall")){
-            IsCollide = true;
-        }
-    }
+        var moveDir = targetPos - transform.position;
 
-    void OnCollisionExit2D(Collision2D collision)
-    {
-        IsCollide = false;
+        foreach (var part in _blockParts)
+        {
+            if (part.CheckCollidedPart(moveDir, out Collider collider))
+            {
+                var layer = collider.gameObject.layer;
+
+                if (layer != LayerMask.NameToLayer("Door"))
+                {
+                    return false;
+                }
+
+                var door = collider.gameObject.GetComponent<Door3D>();
+                if (!door.CheckBlockCanGoThrough(this))
+                {
+                    return false;
+                }
+
+                //TODO: Handle logic to let this block go through door
+            }
+        }
+
+        return true;
     }
 
     public GameObject GetObject()

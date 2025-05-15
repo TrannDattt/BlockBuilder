@@ -9,10 +9,11 @@ public class BlockSpawner3D : Singleton<BlockSpawner3D>
 {
     [SerializeField] private List<Block3DPrefabEntry> blockPrefabs;
 
-    public void SpawnBlock(EditorBlock block2D, Vector3 pos, Quaternion rotation){
+    public Block3D SpawnBlock(EditorBlock block2D, Vector3 pos, Quaternion rotation){
         var blockPreb = blockPrefabs.FirstOrDefault((block) => block.shape == block2D.Shape);
         var spawnedBlock = Instantiate(blockPreb.prefab, pos, rotation, transform);
         spawnedBlock.InitBlock(block2D.PrimaryColor);
+        return spawnedBlock;
     }
 }
 

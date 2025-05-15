@@ -4,6 +4,9 @@ using BuilderTool.Helpers;
 using BuilderTool.LevelEditor;
 using BuilderTool.Enums;
 using System.Threading.Tasks;
+using BuilderTool.Mechanic;
+using System;
+using BuilderTool.Interfaces;
 
 public class Grid3D : Singleton<Grid3D>
 {
@@ -137,7 +140,7 @@ public class Grid3D : Singleton<Grid3D>
     }
 
     private void PlaceWall(Tile3D tile, int tileIndex, EDirection placeDir){
-        var tileCollider = tile.GetComponentInChildren<BoxCollider2D>();
+        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
         float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
         Vector2 offset = placeDir switch {
@@ -160,13 +163,20 @@ public class Grid3D : Singleton<Grid3D>
 
         if(tile.TileType == ETileType.Door)
         {
-            var doorTile = EditorField.Instance.Tiles[tileIndex];
-            var color = (doorTile.CurTileAttribute as DoorTile).DoorDict[placeDir];
+            var doorTile = EditorField.Instance.Tiles[tileIndex].CurTileAttribute as DoorTile;
+            var color = doorTile.DoorDict[placeDir];
 
             if(color != EColor.Black)
             {
                 var spawnedDoor = Instantiate(_doorPreb, pos, rotation, _wallParent);
                 spawnedDoor.InitDoor(color);
+                
+                var key = new Tuple<ICanHaveMechanic, EDirection>(doorTile, placeDir);
+                if(EditorField.Instance.MechanicDict.ContainsKey(key)){
+                    var mechanic = EditorField.Instance.MechanicDict[key];
+                    var mechanicHandler = spawnedDoor.gameObject.GetComponent<MechanicHandler>();
+                    mechanicHandler.SetMechanic(mechanic);
+                }
             }
             else{
                 var spawnedWall = Instantiate(_wallPreb, pos, rotation, _wallParent);
@@ -180,7 +190,7 @@ public class Grid3D : Singleton<Grid3D>
     }
 
     private void PlaceCorner(Tile3D tile, EDirection verticalDir, EDirection horizontalDir){
-        var tileCollider = tile.GetComponentInChildren<BoxCollider2D>();
+        var tileCollider = tile.GetComponentInChildren<BoxCollider>();
         float halfSize = tileCollider.bounds.max.x - tileCollider.bounds.center.x;
 
         Vector3 verticalOffset = verticalDir switch {
@@ -210,7 +220,14 @@ public class Grid3D : Singleton<Grid3D>
             Vector3 offset = new(0, 0, -.25f);
             Vector3 pos = _floor3D[tileIndex / FloorMaxHeight, tileIndex % FloorMaxWidth].transform.position + offset;
 
-            BlockSpawner3D.Instance.SpawnBlock(block, pos, block.transform.rotation);
+            var spawnedBlock = BlockSpawner3D.Instance.SpawnBlock(block, pos, block.transform.rotation);
+
+            var key = new Tuple<ICanHaveMechanic, EDirection>(block, EDirection.None);
+            if(EditorField.Instance.MechanicDict.ContainsKey(key)){
+                var mechanic = EditorField.Instance.MechanicDict[key];
+                var mechanicHandler = spawnedBlock.gameObject.GetComponent<MechanicHandler>();
+                // mechanicHandler.SetMechanic(mechanic);
+            }
         }
     }
 

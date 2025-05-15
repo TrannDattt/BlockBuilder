@@ -1,3 +1,4 @@
+using System;
 using BuilderTool.Enums;
 using BuilderTool.Interfaces;
 using BuilderTool.LevelEditor;
@@ -15,6 +16,40 @@ namespace BuilderTool.Mechanic
         [SerializeField] private TMP_InputField _downDoorChainTurn;
         [SerializeField] private TMP_InputField _leftDoorChainTurn;
         [SerializeField] private TMP_InputField _rightDoorChainTurn;
+        
+        public override void UpdateMechanicDisplay(AMechanic mechanic, EDirection dir)
+        {
+            switch(dir){
+                case EDirection.None:
+                    UpdateTextFieldDisplay(_blockChainTurn, mechanic as Chain);
+                    break;
+
+                case EDirection.Up:
+                    UpdateTextFieldDisplay(_upDoorChainTurn, mechanic as Chain);
+                    break;
+
+                case EDirection.Down:
+                    UpdateTextFieldDisplay(_downDoorChainTurn, mechanic as Chain);
+                    break;
+
+                case EDirection.Left:
+                    UpdateTextFieldDisplay(_leftDoorChainTurn, mechanic as Chain);
+                    break;
+
+                case EDirection.Right:
+                    UpdateTextFieldDisplay(_rightDoorChainTurn, mechanic as Chain);
+                    break;
+            }
+        }
+
+        private void UpdateTextFieldDisplay(TMP_InputField inputField, Chain mechanic){
+            if(mechanic == null){
+                inputField.text = "0";
+                return;
+            }
+
+            inputField.text = mechanic.TurnCount.ToString();
+        }
 
         public override void ResetMechanicDisplay()
         {
@@ -30,103 +65,13 @@ namespace BuilderTool.Mechanic
             }
         }
 
-        public override void UpdateMechanicDisplay(AMechanic mechanic)
-        {
-            var chainMechanic = mechanic as Chain;
-            switch(chainMechanic.Dir){
-                case Enums.EDirection.None:
-                    _blockChainTurn.text = chainMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Up:
-                    _upDoorChainTurn.text = chainMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Down:
-                    _downDoorChainTurn.text = chainMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Left:
-                    _leftDoorChainTurn.text = chainMechanic.TurnCount.ToString();
-                    break;
-
-                case Enums.EDirection.Right:
-                    _rightDoorChainTurn.text = chainMechanic.TurnCount.ToString();
-                    break;
-            }
-        }
-
-        public override void LoadMechanicData(AMechanic mechanic, ICanHaveMechanic obj)
-        {
-            var chain = mechanic as Chain;
-            // if(chain == null){
-            //     ResetMechanicData();
-            // }
-
-            if(_blockChainTurn != null)
+        private Tuple<EDirection, Chain> GetMechanicFromUI(TMP_InputField inputField, EDirection dir){
+            if (int.TryParse(inputField.text, out int turnCount) && turnCount > 0)
             {
-                _button.UpdateMechanicData(new Chain(EMechanic.Chained, chain.Dir, chain.TurnCount), obj, EDirection.None);
+                return new(dir, new Chain(EMechanic.Chained, dir, turnCount));
             }
-            else{
-                _button.UpdateMechanicData(new Chain(EMechanic.Chained, chain.Dir, chain.TurnCount), obj, chain.Dir);
-            }
-        }
 
-        public override void ResetMechanicData(ICanHaveMechanic obj)
-        {
-            // ResetMechanicDisplay();
-
-            var holder = obj.GetObject();
-
-            if(holder.TryGetComponent(out EditorBlock block))
-            {
-                _button.UpdateMechanicData(null, block, EDirection.None);
-            }
-            else{
-                // var tiles = TileSelectHandler.Instance.SelectedTiles;
-                // tiles.ForEach(
-                //     tile => {
-                //         var door = tile.CurTileAttribute as DoorTile;
-                //         _button.UpdateMechanicData(null, door, dir);
-                //     }
-                // );
-            }
-        }
-
-        private void UpdateMechanicData(int chainTurn, EDirection dir){
-            if(chainTurn > 0)
-            {
-                if(_blockChainTurn != null)
-                {
-                    var block = BlockSelectHandler.Instance.SelectedBlock;
-                    _button.UpdateMechanicData(new Chain(EMechanic.Chained, dir, chainTurn), block, EDirection.None);
-                }
-                else{
-                    var tiles = TileSelectHandler.Instance.SelectedTiles;
-                    tiles.ForEach(
-                        tile => {
-                            var door = tile.CurTileAttribute as DoorTile;
-                            _button.UpdateMechanicData(new Chain(EMechanic.Chained, dir, chainTurn), door, dir);
-                        }
-                    );
-                }
-            }
-            else{
-                if(_blockChainTurn != null)
-                {
-                    var block = BlockSelectHandler.Instance.SelectedBlock;
-                    _button.UpdateMechanicData(null, block, dir);
-                }
-                else{
-                    var tiles = TileSelectHandler.Instance.SelectedTiles;
-                    tiles.ForEach(
-                        tile => {
-                            var door = tile.CurTileAttribute as DoorTile;
-                            _button.UpdateMechanicData(null, door, dir);
-                        }
-                    );
-                }
-            }
+            return new(dir, null);
         }
 
         private void AssignListener(TMP_InputField inputField, EDirection dir){
@@ -134,16 +79,10 @@ namespace BuilderTool.Mechanic
                 return;
             }
             
-            inputField.onValueChanged.AddListener(value =>
+            inputField.onValueChanged.AddListener(_ =>
             {
-                if (int.TryParse(value, out int chainTurn))
-                {
-                    UpdateMechanicData(chainTurn, dir);
-                }
-                else
-                {
-                    UpdateMechanicData(0, dir);
-                }
+                var mechanic = GetMechanicFromUI(inputField, dir);
+                _button.AssignMechanicToObject(mechanic.Item2, mechanic.Item1);
             });
         }
 

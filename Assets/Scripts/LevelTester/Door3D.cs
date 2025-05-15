@@ -18,6 +18,11 @@ public class Door3D : Wall3D, ICanHaveMechanic{
         _renderer.material.color = ColorMapper.GetColor(color);
     }
 
+    public bool CheckBlockCanGoThrough(Block3D block)
+    {
+        return block.Color == Color;
+    }
+
     public GameObject GetObject()
     {
         return gameObject;

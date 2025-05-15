@@ -4,6 +4,7 @@ using BuilderTool.Enums;
 using BuilderTool.Helpers;
 using BuilderTool.Interfaces;
 using BuilderTool.Mechanic;
+using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,14 @@ namespace BuilderTool.LevelEditor
         private Queue<MechanicIcon> _iconQueue = new();
         private Dictionary<Tuple<ICanHaveMechanic, EDirection>, MechanicIcon> _iconDict = new();
         private Camera _mainCam;
+
+        public void ShowIcons(){
+            _spawnTransform.gameObject.SetActive(true);
+        }
+
+        public void HideIcons(){
+            _spawnTransform.gameObject.SetActive(false);
+        }
 
         public void UpdateIcon(AMechanic mechanic, ICanHaveMechanic obj, EDirection dir){
             var key = new Tuple<ICanHaveMechanic, EDirection>(obj, dir);

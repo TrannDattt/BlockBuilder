@@ -59,15 +59,20 @@ namespace BuilderTool.LevelEditor
             var leftMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Left);
             var rightMechanic = EditorField.Instance.GetMechanicFromDict(door, EDirection.Right);
 
-            Debug.Log((upMechanic as IImmoblized)?.TurnCount);
-            Debug.Log((downMechanic as IImmoblized)?.TurnCount);
-            Debug.Log((leftMechanic as IImmoblized)?.TurnCount);
-            Debug.Log((rightMechanic as IImmoblized)?.TurnCount);
+            // Debug.Log((upMechanic as IImmoblized)?.TurnCount);
+            // Debug.Log((downMechanic as IImmoblized)?.TurnCount);
+            // Debug.Log((leftMechanic as IImmoblized)?.TurnCount);
+            // Debug.Log((rightMechanic as IImmoblized)?.TurnCount);
 
-            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(upMechanic);
-            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(downMechanic);
-            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(leftMechanic);
-            _doorMechanicButtonGroup.UpdateMechanicButtonDisplay(rightMechanic);
+            // Debug.Log(upMechanic);
+            // Debug.Log(downMechanic);
+            // Debug.Log(leftMechanic);
+            // Debug.Log(rightMechanic);
+
+            _doorMechanicButtonGroup.UpdateMechanicDisplay(upMechanic, door);
+            _doorMechanicButtonGroup.UpdateMechanicDisplay(downMechanic, door);
+            _doorMechanicButtonGroup.UpdateMechanicDisplay(leftMechanic, door);
+            _doorMechanicButtonGroup.UpdateMechanicDisplay(rightMechanic, door);
         }
 
         private void HideAttributeSelector()
@@ -80,7 +85,7 @@ namespace BuilderTool.LevelEditor
         }
 
         private void HideDoorMechanicSeletor(){
-            _doorMechanicButtonGroup.ResetButtonGroupDisplay();
+            // _doorMechanicButtonGroup.ResetButtonGroupDisplay();
             _doorMechanicSelectorMenu.SetActive(false);
         }
 
@@ -143,8 +148,8 @@ namespace BuilderTool.LevelEditor
             }
         }
 
-        public void LoadBlockMechanic(AMechanic mechanic, ICanHaveMechanic obj){
-            _doorMechanicButtonGroup.LoadMechanicData(mechanic, obj);
+        public void LoadDoorMechanic(AMechanic mechanic, ICanHaveMechanic obj){
+            _doorMechanicButtonGroup.AssignMechanicToObject(mechanic, obj);
         }
 
         private void Start()

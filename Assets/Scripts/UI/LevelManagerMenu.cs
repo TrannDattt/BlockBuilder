@@ -65,9 +65,15 @@ namespace BuilderTool.UIElement
 
         private async void TestLevel()
         {
+            if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName(_testerScene))
+            {
+                return;
+            }
+
             TileAttributeSelector.Instance.CloseMenu();
             BlockAttributeSelector.Instance.CloseMenu();
             BlockDisplayShelf.Instance.CloseShelf();
+            MechanicIconPooling.Instance.HideIcons();
 
             await DisableScene(SceneManager.GetSceneByName(_editorScene));
 
@@ -87,10 +93,16 @@ namespace BuilderTool.UIElement
 
         private async void DesignLevel()
         {
+            if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName(_editorScene))
+            {
+                return;
+            }
+
             SceneManager.UnloadSceneAsync(_testerScene);
             await EnableScene(SceneManager.GetSceneByName(_editorScene));
 
             BlockDisplayShelf.Instance.OpenShelf();
+            MechanicIconPooling.Instance.ShowIcons();
             CameraController.Instance.ChangeToDesignMode();
         }
 
