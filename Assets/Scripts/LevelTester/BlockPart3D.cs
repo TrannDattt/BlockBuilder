@@ -35,4 +35,25 @@ public class BlockPart3D : MonoBehaviour
 
         return collider != null;
     }
+
+    public bool CheckCanGoThroughDoor(Vector3 dir)
+    {
+        if (Physics.Raycast(transform.position, dir, out var hit, Mathf.Infinity, LayerMask.GetMask("Wall", "Block", "Door")))
+        {
+            if (hit.collider.gameObject.TryGetComponent(out BlockPart3D part) && BaseObject == part.BaseObject)
+            {
+                return true;
+                // Debug.Log($"Collided with: {hit.collider.gameObject}");
+            }
+
+            // var obj = hit.collider.transform.parent.gameObject;
+            Debug.Log(hit.collider.gameObject.layer);
+            if (hit.collider.GetComponentInParent<Door3D>())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

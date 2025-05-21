@@ -23,6 +23,7 @@ public class Block3D : MonoBehaviour, ICanHaveMechanic{
     }
 
     public void ChangeColor(EColor color){
+        Color = color;
         _blockParts.ForEach(part => part.ChangeColor(color));
     }
 
@@ -41,17 +42,37 @@ public class Block3D : MonoBehaviour, ICanHaveMechanic{
                     return false;
                 }
 
-                var door = collider.gameObject.GetComponent<Door3D>();
-                if (!door.CheckBlockCanGoThrough(this))
+                Debug.Log(1);
+                var door = collider.gameObject.GetComponentInParent<Door3D>();
+                if (!door.CheckMatchColor(this))
                 {
                     return false;
                 }
+
+                Debug.Log(2);
+                if (!CheckCanGoThroughDoor(moveDir))
+                {
+                    return false;
+                }
+
+                Debug.Log(3);
+                GoThroughDoor();
 
                 //TODO: Handle logic to let this block go through door
             }
         }
 
         return true;
+    }
+
+    public bool CheckCanGoThroughDoor(Vector3 moveDir)
+    {
+        return _blockParts.All(part => part.CheckCanGoThroughDoor(moveDir));
+    }
+
+    private void GoThroughDoor()
+    {
+        Destroy(gameObject);
     }
 
     public GameObject GetObject()

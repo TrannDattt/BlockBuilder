@@ -93,10 +93,10 @@ namespace BuilderTool.UIElement
 
         private async void DesignLevel()
         {
-            if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName(_editorScene))
-            {
-                return;
-            }
+            // if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName(_editorScene))
+            // {
+            //     return;
+            // }
 
             SceneManager.UnloadSceneAsync(_testerScene);
             await EnableScene(SceneManager.GetSceneByName(_editorScene));

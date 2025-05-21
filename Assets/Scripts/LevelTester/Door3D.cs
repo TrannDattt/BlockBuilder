@@ -18,7 +18,7 @@ public class Door3D : Wall3D, ICanHaveMechanic{
         _renderer.material.color = ColorMapper.GetColor(color);
     }
 
-    public bool CheckBlockCanGoThrough(Block3D block)
+    public bool CheckMatchColor(Block3D block)
     {
         return block.Color == Color;
     }

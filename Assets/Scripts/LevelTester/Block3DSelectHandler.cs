@@ -36,7 +36,7 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
 
         if(SelectedBlock.CheckCollidedWhenMove(targetPos))
         {
-            SelectedBlock.Body.MovePosition(targetPos);
+            SelectedBlock?.Body.MovePosition(targetPos);
         }
     }
 
@@ -65,7 +65,7 @@ public class Block3DSelectHandler : Singleton<Block3DSelectHandler>{
         }
 
         if (Input.GetKey(KeyCode.Mouse0) && SelectedBlock != null) {
-            MoveBlock(Input.mousePosition);
+                MoveBlock(Input.mousePosition);
         }
 
         if (Input.GetKeyUp(KeyCode.Mouse0) && SelectedBlock != null) {
